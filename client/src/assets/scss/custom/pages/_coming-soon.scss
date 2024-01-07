@@ -1,0 +1,31 @@
+// 
+// coming-soon.scss
+//
+
+.counter-number {
+  font-size: 32px;
+  font-weight: $font-weight-bold;
+  color: #{map-get($grays, "800")};
+  span {
+      font-size: 15px;
+      font-weight: $font-weight-normal;
+      display: block;
+      color: #{map-get($grays, "600")};
+  }
+}
+
+.coming-box {
+  float: left;
+  width: 25%;
+}
+
+
+// dark mode
+body[data-layout-color="dark"] {
+  .counter-number {
+    color: #{map-get($dark-grays, "800")};
+    span {
+        color: #{map-get($dark-grays, "600")};
+    }
+  }
+}

@@ -1,0 +1,38 @@
+// 
+// backgrounds.scss
+//
+
+
+@each $color,
+$value in $theme-colors {
+    .bg-#{$color} {
+        background-color: $value !important;
+    }
+    .bg-soft-#{$color} {
+        background-color: rgba(($value), 0.25) !important;
+    }
+    .text-#{$color} {
+        color: $value !important;
+    }
+}
+
+.bg-ghost {
+    opacity: 0.4;
+}
+
+
+
+// dark mode
+body[data-layout-color="dark"] {
+    @each $color, $value in $dark-theme-colors {
+        .bg-#{$color} {
+            background-color: $value !important;
+        }
+        .bg-soft-#{$color} {
+            background-color: rgba(($value), 0.25) !important;
+        }
+        .text-#{$color} {
+            color: $value !important;
+        }
+    }
+}

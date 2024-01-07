@@ -1,0 +1,19 @@
+//
+// deni-react-tree-view.scss
+//
+
+.deni-react-treeview-container {
+    height: auto !important;
+    width: auto !important;
+    border: 0px solid !important;
+}
+
+.deni-react-treeview-container {
+    background-color: $card-bg !important;
+}
+
+.deni-react-treeview-container.classic {
+    .deni-react-treeview-item-container.classic {
+        color: $body-color !important;
+    }
+}

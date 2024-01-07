@@ -1,0 +1,572 @@
+//
+// topbar.scss
+//
+
+.logo {
+    display: block;
+
+    span.logo-lg {
+        display: block;
+    }
+
+    span.logo-sm {
+        display: none;
+    }
+
+    .logo-lg-text-dark {
+        color: #{map-get($grays, "900")};
+        font-weight: $font-weight-bold;
+        font-size: 22px;
+        text-transform: uppercase;
+    }
+
+    .logo-lg-text-light {
+        color: $white;
+        font-weight: $font-weight-bold;
+        font-size: 22px;
+        text-transform: uppercase;
+    }
+}
+
+.logo-box {
+    height: $topbar-height;
+    width: $leftbar-width;
+    background-color: $logo-box-background;
+    float: left;
+    transition: all 0.1s ease-out;
+
+    .logo {
+        line-height: $topbar-height;
+    }
+}
+
+.navbar-custom {
+    .logo-light {
+        display: $logo-dark-display;
+    }
+
+    .logo-dark {
+        display: $logo-light-display;
+    }
+}
+
+.navbar-custom {
+    background-color: var(--#{$variable-prefix}body-bg);
+    padding: 0 calc(#{$grid-gutter-width} / 2) 0 0;
+    position: fixed;
+    left: 0;
+    right: 0;
+    height: $topbar-height;
+    z-index: 1001;
+
+    .topnav-menu {
+        &.topnav-menu-left {
+            display: inline-block;
+        }
+        > li {
+            float: left;
+        }
+        .nav-link {
+            padding: 0 15px;
+            color: #{map-get($grays, "700")};
+            min-width: 32px;
+            display: block;
+            line-height: $topbar-height;
+            text-align: center;
+            max-height: $topbar-height;
+        }
+    }
+    .dropdown.show {
+        .nav-link {
+            background-color: #{rgba(map-get($grays, "700"), 0.05)};
+        }
+    }
+
+    /* Search */
+    .app-search {
+        height: $topbar-height;
+        display: grid;
+        width: 180px;
+        margin-right: 20px;
+        align-items: center;
+
+        .react-select__placeholder,
+        input::placeholder {
+            font-size: 0.8125rem;
+            color: #{map-get($grays, "500")};
+            margin: 0;
+        }
+
+        .react-select__menu {
+            overflow: hidden;
+            width: 320px !important;
+            margin-top: 0;
+        }
+
+        .react-select__input,
+        .react-select__value-container {
+            color: $dark !important;
+            padding: 0;
+        }
+
+        .form-control,
+        .react-select__control {
+            border: none;
+            height: 38px;
+            padding-left: 20px;
+            padding-right: 0;
+            color: $white !important;
+            background-color: $topbar-search-bg;
+            box-shadow: none;
+            border-radius: 30px 30px 30px 30px;
+        }
+
+        .btn {
+            background-color: $topbar-search-bg;
+            border-color: transparent;
+            color: #{map-get($grays, "700")};
+            border-radius: 0 30px 30px 0;
+            box-shadow: none !important;
+        }
+    }
+
+    .button-menu-mobile {
+        border: none;
+        color: #{map-get($grays, "900")};
+        display: inline-block;
+        height: $topbar-height;
+        line-height: $topbar-height;
+        width: 60px;
+        background-color: transparent;
+        font-size: 24px;
+        cursor: pointer;
+    }
+
+    .button-menu-mobile.disable-btn {
+        display: none;
+    }
+}
+
+/* Notification */
+.noti-scroll {
+    max-height: 230px;
+}
+
+.notification-list {
+    margin-left: 0;
+
+    .noti-title {
+        background-color: transparent;
+        padding: 15px 20px;
+    }
+
+    .noti-icon-badge {
+        display: inline-block;
+        position: absolute;
+        top: 16px;
+        right: 10px;
+    }
+
+    .notify-item {
+        padding: 12px 20px;
+
+        .notify-icon {
+            float: left;
+            height: 36px;
+            width: 36px;
+            font-size: 18px;
+            line-height: 36px;
+            text-align: center;
+            margin-right: 10px;
+            border-radius: 50%;
+            color: $white;
+        }
+
+        .notify-details {
+            margin-bottom: 5px;
+            overflow: hidden;
+            margin-left: 45px;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            color: #{map-get($grays, "800")};
+
+            b {
+                font-weight: 500;
+            }
+
+            small {
+                display: block;
+            }
+
+            span {
+                display: block;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                font-size: 13px;
+            }
+        }
+
+        .user-msg {
+            margin-left: 45px;
+            white-space: normal;
+            line-height: 16px;
+        }
+    }
+
+    .profile-dropdown {
+        .notify-item {
+            padding: 7px 20px;
+        }
+    }
+}
+
+.noti-icon {
+    font-size: 21px;
+    vertical-align: middle;
+}
+
+.profile-dropdown {
+    min-width: 170px;
+
+    i {
+        vertical-align: middle;
+        margin-right: 5px;
+    }
+}
+
+.nav-user {
+    padding: 0 12px !important;
+
+    img {
+        height: 32px;
+        width: 32px;
+    }
+}
+
+.page-title-main {
+    margin: 0;
+    line-height: 70px;
+    padding: 0 24px;
+}
+
+// Full Screen
+.fullscreen-enable {
+    [data-toggle="fullscreen"] {
+        .fe-maximize::before {
+            content: "\e88d";
+        }
+    }
+}
+
+@include media-breakpoint-down(lg) {
+    .logo-box {
+        width: $leftbar-width-condensed !important;
+        padding-right: 0 !important;
+
+        .logo-lg {
+            display: none !important;
+        }
+
+        .logo-sm {
+            display: block !important;
+        }
+    }
+}
+
+@media (max-width: 600px) {
+    .navbar-custom {
+        .dropdown {
+            position: static;
+
+            .dropdown-menu {
+                left: 10px !important;
+                right: 10px !important;
+            }
+        }
+    }
+}
+
+// dark Topbar
+
+body[data-topbar-color="dark"] {
+    &[data-sidebar-color="light"],
+    &[data-sidebar-color="dark"],
+    &[data-sidebar-color="brand"] {
+        .logo-box {
+            background-color: transparent;
+        }
+    }
+    .content-page {
+        margin-top: calc(70px + 24px);
+    }
+    .navbar-custom {
+        background-color: $bg-topbar-dark !important;
+        box-shadow: $box-shadow-sm;
+
+        .topnav-menu {
+            .nav-link {
+                color: #{map-get($grays, "400")};
+            }
+        }
+
+        .dropdown {
+            .nav-link.show {
+                background-color: rgba($white, 0.03);
+            }
+        }
+
+        .button-menu-mobile {
+            color: $white;
+        }
+
+        .page-title-main {
+            margin: 0;
+            line-height: 70px;
+            padding: 0 30px;
+            color: #{map-get($grays, "100")};
+        }
+
+        /* Search */
+        .app-search {
+            .react-select__placeholder,
+            input::placeholder {
+                color: rgba($white, 0.7) !important;
+            }
+
+            .form-control,
+            .react-select__control {
+                background-color: $topbar-search-bg-dark;
+                border-color: $bg-topbar-dark;
+            }
+
+            .react-select__input,
+            .react-select__value-container {
+                color: rgba($white, 0.6) !important;
+            }
+
+            .btn {
+                background-color: $topbar-search-bg-dark;
+                color: rgba($white, 0.7);
+            }
+        }
+    }
+}
+
+body[data-topbar-color="dark"] {
+    .navbar-custom {
+        .page-title-main {
+            color: $page-title-color;
+        }
+    }
+}
+
+@include media-breakpoint-down(lg) {
+    body[data-layout-mode="horizontal"] {
+        // Navbar Button - Horizontal
+        .navbar-toggle {
+            border: 0;
+            position: relative;
+            padding: 0;
+            margin: 0;
+            cursor: pointer;
+
+            .lines {
+                width: 25px;
+                display: block;
+                position: relative;
+                height: 16px;
+                transition: all 0.5s ease;
+                margin-top: calc(#{$topbar-height - 16px} / 2);
+            }
+
+            span {
+                height: 2px;
+                width: 100%;
+                background-color: #{map-get($grays, "400")};
+                display: block;
+                margin-bottom: 5px;
+                transition: transform 0.5s ease;
+            }
+
+            &.open {
+                span {
+                    position: absolute;
+
+                    &:first-child {
+                        top: 7px;
+                        transform: rotate(45deg);
+                    }
+
+                    &:nth-child(2) {
+                        visibility: hidden;
+                    }
+
+                    &:last-child {
+                        width: 100%;
+                        top: 7px;
+                        transform: rotate(-45deg);
+                    }
+                }
+            }
+        }
+    }
+}
+
+body[data-layout-mode="horizontal"] {
+    &[data-topbar-color="light"] {
+        .logo-box {
+            .logo-dark {
+                display: $logo-auth-dark-display;
+            }
+
+            .logo-light {
+                display: $logo-auth-light-display;
+            }
+        }
+    }
+    &[data-topbar-color="dark"] {
+        .logo-box {
+            .logo-dark {
+                display: none;
+            }
+
+            .logo-light {
+                display: block;
+            }
+        }
+    }
+    .button-menu-mobile {
+        display: none;
+    }
+
+    .logo-box {
+        width: auto;
+        padding-right: 50px;
+        background-color: transparent;
+    }
+
+    @media (min-width: 992px) and (max-width: 1366px) {
+        .logo-box {
+            padding-left: 20px;
+        }
+    }
+}
+
+@media (max-width: 360px) {
+    .navbar-custom {
+        .topnav-menu {
+            .nav-link {
+                padding: 0 12px;
+            }
+        }
+        .button-menu-mobile {
+            width: 45px;
+        }
+    }
+}
+
+@media (max-width: 992px) {
+    .button-menu-mobile.disable-btn {
+        display: block !important;
+    }
+    .page-title-main {
+        display: none;
+    }
+}
+
+@media (max-width: 992px) {
+    .logo-box {
+        background: none !important;
+    }
+    .user-box {
+        display: none;
+    }
+}
+
+// body[data-layout-mode="vertical"] {
+//     .logo-box {
+//         .logo-dark {
+//             display: block;
+//         }
+
+//         .logo-light {
+//             display: none;
+//         }
+//     }
+// }
+
+// dark mode
+body[data-layout-color="dark"] {
+    .logo {
+        .logo-lg-text-dark {
+            color: #{map-get($dark-grays, "900")};
+        }
+    }
+    .navbar-custom {
+        background-color: var(--#{$variable-prefix}body-bg);
+        .topnav-menu {
+            .nav-link {
+                color: #{map-get($dark-grays, "700")};
+            }
+        }
+        .dropdown.show {
+            .nav-link {
+                background-color: #{rgba(map-get($dark-grays, "700"), 0.05)};
+            }
+        }
+        .app-search {
+            .react-select__placeholder,
+            input::placeholder {
+                color: #{map-get($dark-grays, "500")} !important;
+            }
+
+            .form-control {
+                color: #{map-get($dark-grays, "900")};
+            }
+            .btn {
+                color: #{map-get($dark-grays, "700")};
+            }
+        }
+        .button-menu-mobile {
+            color: #{map-get($dark-grays, "900")};
+        }
+    }
+    .notification-list {
+        .notify-item {
+            .notify-details {
+                color: #{map-get($dark-grays, "800")};
+            }
+        }
+    }
+    // &[data-topbar-color="dark"] {
+    //     .navbar-custom {
+    //         .topnav-menu {
+    //             .nav-link {
+    //                 color:#{map-get($dark-grays, "400")};
+    //             }
+    //         }
+    //         .page-title-main {
+    //             color: #{map-get($dark-grays, "100")};
+    //         }
+    //     }
+    // }
+    &[data-layout-mode="horizontal"] {
+        .logo-box {
+            .logo-dark {
+                display: none;
+            }
+
+            .logo-light {
+                display: block;
+            }
+        }
+        @include media-breakpoint-down(lg) {
+            .navbar-toggle {
+                span {
+                    background-color: #{map-get($dark-grays, "400")};
+                }
+            }
+        }
+    }
+}

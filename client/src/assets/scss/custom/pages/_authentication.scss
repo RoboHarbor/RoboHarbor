@@ -1,0 +1,43 @@
+//
+// authentication.scss
+//
+
+.authentication-bg.enlarged {
+    min-height: 100px;
+}
+
+// authentication pages background
+body.authentication-bg {
+    background-image: $auth-img-bg;
+    background-size: cover;
+    background-position: center;
+}
+
+// Logout page
+.logout-icon {
+    width: 140px;
+}
+
+.auth-logo {
+    .logo-light {
+        display: $logo-auth-light-display !important;
+    }
+    .logo-dark {
+        display: $logo-auth-dark-display !important;
+    }
+}
+
+// dark mode
+body[data-layout-color="dark"] {
+    .auth-logo {
+        .logo-light {
+            display: $logo-auth-dark-display !important;
+        }
+        .logo-dark {
+            display: $logo-auth-light-display !important;
+        }
+    }
+    &.authentication-bg {
+        background-image: $auth-img-bg-dark;
+    }
+}

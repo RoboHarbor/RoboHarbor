@@ -1,0 +1,240 @@
+//
+// quilljs-editor.scss
+//
+
+.ql-container {
+    font-family: $font-family-base;
+    border-bottom-left-radius: $input-border-radius;
+    border-bottom-right-radius: $input-border-radius;
+
+    &.ql-snow {
+        border-color: $input-border-color;
+    }
+}
+
+.ql-bubble {
+    border: $input-border-width solid $input-border-color;
+    border-radius: $input-border-radius;
+}
+
+.ql-toolbar {
+    font-family: $font-family-base !important;
+    border-top-left-radius: $input-border-radius;
+    border-top-right-radius: $input-border-radius;
+    span {
+        outline: none !important;
+        color: #{map-get($grays, "700")};
+
+        &:hover {
+            color: $primary !important;
+        }
+    }
+
+    &.ql-snow {
+        border-color: $input-border-color;
+
+        .ql-picker.ql-expanded {
+            .ql-picker-label {
+                border-color: transparent;
+            }
+        }
+        .ql-formats {
+            margin-right: 11px;
+            margin-left: 0;
+        }
+    }
+}
+
+.ql-snow {
+    .ql-stroke,
+    .ql-script,
+    .ql-strike svg {
+        stroke: #{map-get($grays, "700")};
+    }
+    .ql-fill {
+        fill: #{map-get($grays, "700")};
+    }
+}
+
+.ql-snow {
+    .ql-picker-options {
+        background-color: $dropdown-bg;
+        border-color: $dropdown-border-color !important;
+    }
+}
+
+.ql-editor {
+    text-align: left;
+    color: #{map-get($grays, "600")};
+    font-weight: $font-weight-normal;
+}
+
+.ql-snow .ql-picker:not(.ql-color-picker):not(.ql-icon-picker) svg {
+    position: absolute;
+    margin-top: -9px;
+    right: 0;
+    left: auto;
+    top: 50%;
+    width: 18px;
+}
+
+.ql-editor {
+    ol,
+    ul {
+        li:not(.ql-direction-rtl) {
+            padding-left: 1.5em;
+            padding-right: 0;
+        }
+    }
+    li:not(.ql-direction-rtl) {
+        &:before {
+            margin-left: -1.5em;
+            margin-right: 0.3em;
+            text-align: right;
+        }
+    }
+}
+
+.ql-editor {
+    ol,
+    ul {
+        padding-left: 1.5em;
+        padding-right: 0;
+    }
+}
+
+// react-draft-wysiwyg
+.react-draft-wrapper {
+    font-family: $font-family-base;
+    border-color: $input-border-color !important;
+    color: #{map-get($grays, "600")};
+    .draft-toolbar {
+        background: transparent !important;
+        border-bottom: 1px solid $input-border-color !important;
+        border: none;
+        .rdw-dropdown-wrapper {
+            background-color: $input-bg;
+            border: $input-border-width solid $input-border-color;
+            &:hover {
+                box-shadow: none;
+            }
+        }
+        .rdw-option-wrapper,
+        .rdw-block-dropdown,
+        .rdw-fontsize-dropdown,
+        .rdw-fontfamily-dropdown,
+        .rdw-dropdown-optionwrapper {
+            background: $input-bg !important;
+            border-color: transparent !important;
+            &:hover,
+            &.rdw-option-active {
+                box-shadow: none !important;
+            }
+            img {
+                fill: $dark !important;
+            }
+            .rdw-dropdownoption-highlighted,
+            .rdw-dropdownoption-active {
+                background: $dropdown-link-active-bg !important;
+            }
+        }
+        .rdw-option-wrapper {
+            background: transparent !important;
+        }
+    }
+    .rdw-editor-main {
+        font-weight: $font-weight-normal;
+        border-color: $input-border-color !important;
+        padding: $input-padding-y $input-padding-x !important;
+        .public-DraftStyleDefault-block {
+            margin: 8px 0 !important;
+        }
+        .public-DraftStyleDefault-ul {
+            padding-left: 1.5em;
+            .public-DraftStyleDefault-block {
+                margin: 0 !important;
+            }
+        }
+    }
+}
+
+// simplemde editor
+
+.EasyMDEContainer {
+    .CodeMirror {
+        background: $input-bg !important;
+        border-color: $input-border-color !important;
+    }
+    .editor-toolbar {
+        border-color: $input-border-color !important;
+
+        i.separator {
+            border-color: $input-border-color !important;
+        }
+
+        button {
+            color: $body-color !important;
+            &:hover {
+                background: #{map-get($grays, "300")} !important;
+                border-color: transparent !important;
+            }
+        }
+    }
+
+    .CodeMirror-lines {
+        .CodeMirror-cursors {
+            .CodeMirror-cursor {
+                border-color: $dark;
+            }
+        }
+        .CodeMirror-code {
+            .CodeMirror-line {
+                color: $dark;
+                .cm-null {
+                    background: transparent !important;
+                    color: $input-color !important;
+                }
+            }
+        }
+    }
+}
+
+// dark mode
+body[data-layout-color="dark"] {
+    .ql-toolbar {
+        span {
+            color: #{map-get($dark-grays, "700")};
+        }
+    }
+    .ql-snow {
+        .ql-stroke,
+        .ql-script,
+        .ql-strike svg {
+            stroke: #{map-get($dark-grays, "700")};
+        }
+        .ql-fill {
+            fill: #{map-get($dark-grays, "700")};
+        }
+    }
+    .ql-editor {
+        color: #{map-get($dark-grays, "600")};
+    }
+
+    .react-draft-wrapper {
+        color: #{map-get($dark-grays, "600")};
+    }
+
+    .EasyMDEContainer {
+        .editor-toolbar {
+            button {
+                &:hover {
+                    background: #{map-get($dark-grays, "300")} !important;
+                }
+            }
+        }
+    }
+    // react-draft-wysiwyg
+    .react-draft-wrapper {
+        color: #{map-get($dark-grays, "600")};
+    }
+}

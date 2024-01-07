@@ -1,0 +1,61 @@
+// 
+// footer.scss
+//
+
+.footer {
+    bottom: 0;
+    padding: 19px 15px 20px;
+    position: absolute;
+    right: 0;
+    color: $footer-color;
+    left: $leftbar-width;
+    background-color: $footer-bg;
+
+    .footer-links {
+        a {
+            color: $footer-color;
+            margin-left: 1.5rem;
+            transition: all .4s;
+            &:hover {
+                color: $footer-link-hover-color;
+            }
+            &:first-of-type {
+                margin-left: 0;
+            }
+        }
+    }
+}
+
+.footer-alt {
+    left: 0 !important;
+    text-align: center;
+    background-color: transparent;
+}
+
+@include media-breakpoint-down(md) {
+    .footer {
+        left: 0 !important;
+        text-align: center;
+    }
+}
+
+body[data-layout-mode="horizontal"] {
+    .footer {
+        left: 0 !important;
+    }
+
+    &[data-layout-size="boxed"] {
+        .footer {
+            max-width: $boxed-layout-width !important;
+        }
+    }
+}
+
+body[data-layout-mode="detached"] {
+    @include media-breakpoint-up(lg) {
+        .footer {
+            position: inherit;
+            margin: 0 10px;
+        }
+    }
+}

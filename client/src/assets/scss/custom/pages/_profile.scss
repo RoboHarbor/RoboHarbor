@@ -1,0 +1,53 @@
+// 
+// profile.scss
+//
+
+.profile-pills {
+    li{
+      a{
+        color: #{map-get($grays, "500")} !important;
+        padding: 0 10px;
+        display: block;
+        line-height: 30px !important;
+  
+        i {
+          font-size: 14px;
+        }
+      }
+    }
+}
+
+.comment-footer {
+    display: block;
+    font-size: 12px;;
+
+    i {
+      font-size: 13px;
+      margin-right: 7px;
+    }
+  }
+  .comment-footer, .comment-footer a {
+    color: #{rgba(map-get($grays, "900"), 0.5)};
+
+    &:hover {
+      color: $primary;
+    }
+}
+
+
+
+
+
+// dark mode
+body[data-layout-color="dark"] {
+  .profile-pills {
+    li{
+      a{
+        color: #{map-get($dark-grays, "500")} !important;
+      }
+    }
+  }
+  .comment-footer, .comment-footer a {
+    color: #{rgba(map-get($dark-grays, "800"), 0.5)};
+  }
+}
