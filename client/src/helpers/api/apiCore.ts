@@ -33,7 +33,7 @@ axios.interceptors.response.use(
                     break;
                 default: {
                     message =
-                        error.response && error.response.data ? error.response.data['message'] : error.message || error;
+                        error.response && error.response.data ? error.response.data : error.message || error;
                 }
             }
             return Promise.reject(message);
@@ -60,7 +60,7 @@ class APICore {
     /**
      * Fetches data from given url
      */
-    get = (url: string, params: any) => {
+    get = (url: string, params: any = null) => {
         let response;
         if (params) {
             var queryString = params
@@ -207,6 +207,14 @@ class APICore {
             this.setLoggedInUser({ token, ...user, ...modifiedUser });
         }
     };
+
+    post = (s: string, body: any) => {
+        return axios.post(s, body);
+    }
+
+    put(s: string, bot: any) {
+        return axios.put(s, bot);
+    }
 }
 
 /*

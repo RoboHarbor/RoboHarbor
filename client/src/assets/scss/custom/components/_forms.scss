@@ -8,6 +8,14 @@
     box-shadow: $components-shadow-sm;
 }
 
+.searchbar {
+    border-radius: 4px;
+    margin-top: 6px;
+    border: 1px solid $border-color;
+    min-height: $input-height;
+    padding: 0 10px;
+}
+
 // Form-control light
 .form-control-light {
     background-color: $input-light-bg !important;

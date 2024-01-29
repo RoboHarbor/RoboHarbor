@@ -12,33 +12,38 @@ import { FormInput } from '../../components/form';
 import { ProjectsList } from './types';
 
 // dummy data
-import { projects } from './data';
+import {IPier} from "../../../../src/models/pier/types";
+import {useEffect, useState} from "react";
+import {getAll} from "../../helpers/api/pier";
+import CreateRobotModal from "../../components/modals/CreateRobotModal";
+import {IRobot} from "../../../../src/models/robot/types";
+import {getRobots} from "../../helpers/api/robots";
 
-type SingleProjectProps = {
-    projects: ProjectsList[];
+type AllRobotsOverviewProps = {
+    robots: IRobot[];
 };
 
-const SingleProject = ({ projects }: SingleProjectProps) => {
+const AllRobotsOverview = ({ robots }: AllRobotsOverviewProps) => {
     return (
         <Row>
-            {(projects || []).map((project, index) => {
+            {(robots || []).map((robot, index) => {
                 return (
                     <Col xl={4} key={index.toString()}>
                         <Card>
                             <Card.Body className="project-box">
-                                <Badge bg={project.variant} className="float-end">
-                                    {project.state}
+                                <Badge  className="float-end">
+
                                 </Badge>
                                 <h4 className="mt-0">
-                                    <Link to="#" className="text-dark">
-                                        {project.title}
+                                    <Link to={"/harbor/robots/"+robot.id?.toString()} className="text-dark">
+                                        {robot.name}
                                     </Link>
                                 </h4>
-                                <p className={classNames('text-' + project.variant, 'text-uppercase', 'font-13')}>
-                                    {project.category}
+                                <p className={classNames('text-', 'text-uppercase', 'font-13')}>
+
                                 </p>
                                 <p className="text-muted font-13">
-                                    {project.shortDesc}
+
                                     <Link to="#" className="text-primary">
                                         View more
                                     </Link>
@@ -46,11 +51,11 @@ const SingleProject = ({ projects }: SingleProjectProps) => {
 
                                 <ul className="list-inline">
                                     <li className="list-inline-item me-4">
-                                        <h4 className="mb-0">{project.question}</h4>
+                                        <h4 className="mb-0"></h4>
                                         <p className="text-muted">Questions</p>
                                     </li>
                                     <li className="list-inline-item">
-                                        <h4 className="mb-0">{project.comment}</h4>
+                                        <h4 className="mb-0"></h4>
                                         <p className="text-muted">Comments</p>
                                     </li>
                                 </ul>
@@ -58,7 +63,7 @@ const SingleProject = ({ projects }: SingleProjectProps) => {
                                 <div className="project-members mb-2">
                                     <h5 className="float-start me-3">Team :</h5>
                                     <div className="avatar-group">
-                                        {(project.teamMembers || []).map((member, index) => {
+                                        {( []).map((member: any, index) => {
                                             return (
                                                 <OverlayTrigger
                                                     key={index.toString()}
@@ -80,16 +85,16 @@ const SingleProject = ({ projects }: SingleProjectProps) => {
 
                                 <h5 className="mb-2 fw-semibold">
                                     Progress
-                                    <span className={classNames('float-end', 'text-' + project.variant)}>
-                                        {project.progress}%
+                                    <span className={classNames('float-end', 'text-')}>
+                                        %
                                     </span>
                                 </h5>
                                 <ProgressBar
-                                    className={classNames('progress-bar-alt-' + project.variant, 'progress-sm')}
+                                    className={classNames('progress-bar-alt-' , 'progress-sm')}
                                 >
                                     <ProgressBar
-                                        variant={project.variant}
-                                        now={project.progress}
+                                        variant={""}
+                                        now={0}
                                         className="progress-animated"
                                     />
                                 </ProgressBar>
@@ -105,23 +110,52 @@ const SingleProject = ({ projects }: SingleProjectProps) => {
 const Projects = () => {
     // set pagetitle
     usePageTitle({
-        title: 'Robos',
+        title: 'Robots',
         breadCrumbItems: [
             {
                 path: 'port',
-                label: 'Robos',
+                label: 'Robots',
                 active: true,
             },
         ],
     });
 
+    const [piers, setPiers] = useState<IPier[]>([]);
+    const [robots, setRobots] = useState<IRobot[]>([]);
+    const [createModalOpen, setCreateModalOpen] = useState<boolean>(false);
+
+    const onRobotCreated = () => {
+        setCreateModalOpen(false);
+        reloadRobots();
+    }
+
+    const reloadRobots = () => {
+        getRobots().then((res) => {
+            setRobots(res.data);
+        });
+    }
+
+    const reloadPiers = () => {
+        getAll().then((res) => {
+            setPiers(res.data);
+        });
+    }
+
+    useEffect(() => {
+        reloadPiers();
+        reloadRobots();
+        setTimeout(() => {
+            reloadRobots();
+        }, 5000);
+    }, []);
+
     return (
         <>
             <Row>
                 <Col sm={4}>
-                    <Link to="#" className="btn btn-purple rounded-pill w-md waves-effect waves-light mb-3">
+                    <Link onClick={() => setCreateModalOpen(true)} to="#" className="btn btn-purple rounded-pill w-md waves-effect waves-light mb-3">
                         <i className="mdi mdi-plus me-1"></i>
-                        Create Project
+                        Create New Robot / App
                     </Link>
                 </Col>
                 <Col sm={8}>
@@ -130,16 +164,19 @@ const Projects = () => {
                             <div className="col-auto">
                                 <div className="d-flex">
                                     <label className="d-flex align-items-center">
-                                        Phase
+                                        Piers
                                         <FormInput
                                             type="select"
                                             name="phase"
                                             containerClass="d-inline-block ms-2"
                                             className="form-select-sm"
                                         >
-                                            <option>All Projects(6)</option>
-                                            <option>completed</option>
-                                            <option>Progress</option>
+                                            <option>All Piers ({piers.length})</option>
+                                            {(piers || []).map((pier, index) => {
+                                                return (
+                                                    <option key={index.toString()}>{pier.identifier}</option>
+                                                );
+                                            })}
                                         </FormInput>
                                     </label>
                                 </div>
@@ -166,7 +203,8 @@ const Projects = () => {
                     </div>
                 </Col>
             </Row>
-            <SingleProject projects={projects} />
+            <AllRobotsOverview robots={robots} />
+            {createModalOpen && <CreateRobotModal onClose={() => onRobotCreated()} open={true} />}
         </>
     );
 };

@@ -7,6 +7,18 @@ export type PricingPlan = {
     isPopular: boolean;
 };
 
+
+export enum LogLevel {
+    INFO = "INFO",
+    ERROR = "ERROR",
+
+    CRASH = "CRASH",
+    STOPPED = "STOPPED",
+    UPDATE_AVAILABLE    = "UPDATE_AVAILABLE",
+    STARTED = "STARTED",
+}
+
+
 type InvoiceItem = {
     id: number;
     name: string;

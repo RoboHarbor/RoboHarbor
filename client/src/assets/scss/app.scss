@@ -42,6 +42,7 @@ $variable-prefix: "ct-";
 @import "custom/components/preloader";
 
 //Components
+@import "custom/components/_logview.scss";
 @import "custom/components/alert";
 @import "custom/components/accordions";
 @import "custom/components/badge";
@@ -51,6 +52,7 @@ $variable-prefix: "ct-";
 @import "custom/components/card";
 @import "custom/components/dropdown";
 @import "custom/components/forms";
+@import "custom/components/_hot_toast.scss";
 @import "custom/components/modal";
 @import "custom/components/nav";
 @import "custom/components/pagination";

@@ -99,7 +99,7 @@ const AllRoutes = () => {
           children: [
 
             {
-              path: ':id',
+              path: 'robots/:id',
               element: <LoadComponent component={TaskDetail} />,
             },
             {

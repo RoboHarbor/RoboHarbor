@@ -1,0 +1,21 @@
+FROM node:20
+
+# Create app directory
+WORKDIR /usr/src/app
+
+### Needed Packages for the Worker
+
+# Bundle app source
+COPY . .
+
+RUN yarn install
+
+RUN yarn run build
+
+# remove unused packages in node_modules (dev dependencies)
+## RUN npm prune --production
+RUN rm -rf $(ls -A -I "node_modules" -I "dist" -I "package.json" )
+
+EXPOSE 9000
+
+CMD [ "yarn", "run", "service"]

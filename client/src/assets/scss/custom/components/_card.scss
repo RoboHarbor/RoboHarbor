@@ -13,6 +13,29 @@
     }
 }
 
+.card-width-220 {
+    min-width: 220px;
+    max-width: 220px;
+}
+
+.card.disabled {
+    opacity: 0.8;
+    pointer-events: none;
+    background: $card-overlay-bg;
+}
+
+.card.nomargin {
+    margin-bottom: 0px;
+}
+
+.card.centered {
+    text-align:center;
+}
+
+.card-bordered {
+    border: 1px solid $border-color;
+    border-radius: $card-border-radius;
+}
 
 .card-widgets {
     float: right;
@@ -66,8 +89,33 @@
     color: $text-muted;
 }
 
+.card-fill {
+    height: 100%;
+}
 
+.card-hoverable {
+    cursor: pointer;
+    transition: all 0.3s ease-in-out;
+    &:hover {
+        box-shadow: $box-shadow-lg;
+        transform: translateY(-1px);
+    }
+}
 
+.card-hoverable-selected {
+    cursor: pointer;
+    transition: all 0.3s ease-in-out;
+    box-shadow: $box-shadow-lg;
+    transform: translateY(-1px);
+
+    border : 1px solid $primary;
+    border-radius: 5px;
+
+    &:hover {
+        box-shadow: $box-shadow-lg;
+        transform: translateY(-1px);
+    }
+}
 
 
 // dark mode

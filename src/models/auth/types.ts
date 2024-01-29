@@ -1,6 +1,11 @@
 
+export type LoginDataDto = {
+    email: string;
+    password: string;
+}
+
 export type UserData = {
-    id: number;
+    id?: number;
     email?: string;
     username: string;
     password: string;

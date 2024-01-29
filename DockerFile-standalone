@@ -1,0 +1,34 @@
+FROM node:20
+
+# Create app directory
+WORKDIR /usr/src/app
+
+### Needed Packages for the Worker
+RUN apt-get update && apt-get install -y \
+    libcairo2-dev \
+    libpango1.0-dev \
+    libjpeg-dev \
+    libgif-dev \
+    librsvg2-dev \
+    build-essential \
+    g++ \
+    python3.9 \
+    python3-pip \
+    git
+RUN apt-get docker.io -y
+
+
+# Bundle app source
+COPY . .
+
+RUN yarn install
+
+RUN yarn run build
+
+# remove unused packages in node_modules (dev dependencies)
+## RUN npm prune --production
+RUN rm -rf $(ls -A -I "node_modules" -I "dist" -I "package.json" )
+
+EXPOSE 9000
+
+CMD [ "yarn", "run", "service"]

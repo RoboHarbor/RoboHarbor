@@ -1,6 +1,6 @@
-import {Controller, Get, Post} from '@nestjs/common';
+import {Body, Controller, Get, Post, Req} from '@nestjs/common';
 import {UiService} from "./ui.service";
-import {UserData} from "../models/auth/types";
+import {LoginDataDto, UserData} from "../models/auth/types";
 import {ApiOperation, ApiTags} from "@nestjs/swagger";
 
 @ApiTags("ui")
@@ -10,7 +10,7 @@ export class UiController {
 
     @Post("/login")
     @ApiOperation({summary: "Login"})
-    login(): any {
-        return this.uiService.login();
+    login(@Body() loginData: LoginDataDto): any {
+        return this.uiService.login(loginData.email, loginData.password);
     }
 }
