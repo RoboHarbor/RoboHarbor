@@ -6,11 +6,12 @@ import {LazyLog, LineContentProps, ScrollFollow} from "react-lazylog";
 
 export interface LogViewProps {
     robotId?: number;
+    reload?: () => void;
 }
 
 
 
-const LogView = ({ robotId }: LogViewProps) => {
+const LogView = ({ robotId, reload }: LogViewProps) => {
 
     const [logs, setLogs] = useState<any[]>([]);
 
@@ -73,6 +74,11 @@ const LogView = ({ robotId }: LogViewProps) => {
                                     const data = new FollowRobotLogMessage(robotId);
                                     ws.send(toJSON(data));
                                 }, 300);
+                            },
+                            onClose: () => {
+                                if (reload) {
+                                    reload();
+                                }
                             },
                             formatMessage: (msg) => {
                                 const log = fromJSON(msg);

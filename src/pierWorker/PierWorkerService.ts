@@ -4,8 +4,9 @@ import {IMessage, MessageBuilder, MessageTypes} from "../harbor/socket.service";
 import {Logger} from "@nestjs/common";
 import {validateRobotShell} from "./shell/ValidateRobotShell";
 import {IRobot} from "../models/robot/types";
-import {IRobotRunner, RobotRunner} from "./RobotRunner";
+import {IRobotRunner, RobotRunner} from "./runner/RobotRunner";
 import RobotFactory from "./RoboFactory";
+import {cleanRobotData} from "../helper/robo";
 
 
 export default class PierWorkerService implements IPierWSListener {
@@ -91,6 +92,9 @@ export default class PierWorkerService implements IPierWSListener {
             this.logger.log("Received robot validation request", msg);
             validateRobotShell(msg.responseId, msg.bot).then((res) => {
                 this.service.answer(msg, MessageBuilder.validateRobotResponseMessage(msg.socketId, msg.pierId, res));
+            })
+            .catch((e) => {
+                this.service.answer(msg, MessageBuilder.errorRobotMessage(msg.socketId, msg.pierId, e.message));
             });
         }
         else if (msg.type === MessageTypes.RELOAD_ROBOTS) {
@@ -112,14 +116,19 @@ export default class PierWorkerService implements IPierWSListener {
         for (let robot of robots) {
             try {
                 if (this.runningRobots) {
-                    if (this.runningRobots.find((r) => r.getRobot().id === robot.id)) {
+                    const r = this.runningRobots.find((r) => r.getRobot().id === robot.id);
+                    if (r) {
                         this.logger.log("Robot already running");
+                        r.updateRobot(cleanRobotData(robot));
                     }
                     else {
                         this.logger.log("Installing robot ", robot);
                         const runner : IRobotRunner = new (RobotFactory.generateRobotRunner(robot))(this, robot);
                         this.runningRobots.push(runner);
-                        runner.startRobot();
+                        runner.startRobot()
+                            .catch((e) => {
+                                this.logger.error("Error while starting robot ", robot, e);
+                            });
                     }
                 }
             }

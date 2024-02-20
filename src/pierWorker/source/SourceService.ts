@@ -1,6 +1,6 @@
-import {IRobot} from "../../models/robot/types";
+import {IRobot, ISourceInfo} from "../../models/robot/types";
 import * as fs from "fs";
-import {IRobotRunner} from "../RobotRunner";
+import {IRobotRunner} from "../runner/RobotRunner";
 import {LogLevel} from "../../models/other/types";
 
 
@@ -9,6 +9,7 @@ export default abstract class SourceService {
     protected targetPath: string = this.basePath;
     private checkInterval: any = null;
     private runner: IRobotRunner;
+
 
     constructor(robot: IRobot, runner: IRobotRunner) {
         this.robot = robot;
@@ -27,45 +28,61 @@ export default abstract class SourceService {
 
     }
 
+    protected getFullTargetPath() {
+        // return absolute path
+        return process.cwd() + "/" + this.targetPath + "/" + this.robot.id.toString();
+    }
 
     abstract downloadSource(): Promise<void>;
 
     checkForUpdates() {
         return new Promise(() => {
-            const updateVersions = async () => {
-                const sourceVersion = await this.getSourceVersion();
-                const localVersion = await this.getLocalVersion();
+            try {
+                const updateVersions = async () => {
+                    try {
+                        const {sourceVersion, sourceMessage} = await this.getSourceVersion();
+                        const localVersion = await this.getLocalVersion();
 
-                const currentRobot = this.robot;
-                if (currentRobot) {
-                    if (!currentRobot.sourceInfo) {
-                        currentRobot.sourceInfo = {
-                            sourceVersion: null,
-                            localVersion: null,
+                        const currentRobot = this.robot;
+                        if (currentRobot) {
+                            if (!currentRobot.sourceInfo) {
+                                currentRobot.sourceInfo = {
+                                    sourceVersion: null,
+                                    localVersion: null,
+                                }
+                            }
+                            if (currentRobot.sourceInfo.sourceVersion !== sourceVersion) {
+                                this.runner.log(LogLevel.UPDATE_AVAILABLE, "Source updated from " + currentRobot.sourceInfo.sourceVersion + " to " + sourceVersion);
+                                currentRobot.sourceInfo.sourceVersion = sourceVersion;
+                                currentRobot.sourceInfo.sourceMessage = sourceMessage;
+                                await this.runner.saveRobot(currentRobot.id, {
+                                    sourceInfo: currentRobot.sourceInfo
+                                });
+                            }
+                            if (currentRobot.sourceInfo.localVersion !== localVersion) {
+                                currentRobot.sourceInfo.localVersion = localVersion;
+
+                                await this.runner.saveRobot(currentRobot.id, {
+                                    sourceInfo: currentRobot.sourceInfo
+                                });
+                            }
                         }
                     }
-                    if (currentRobot.sourceInfo.sourceVersion !== sourceVersion) {
-                        this.runner.log(LogLevel.UPDATE_AVAILABLE, "Source updated from " + currentRobot.sourceInfo.sourceVersion + " to " + sourceVersion);
-                        currentRobot.sourceInfo.sourceVersion = sourceVersion;
-                        await this.runner.saveRobot(currentRobot.id, {
-                            sourceInfo: currentRobot.sourceInfo
-                        });
+                    catch(e) {
+                        console.error("Error checking for updates: ", e);
                     }
-                    if (currentRobot.sourceInfo.localVersion !== localVersion) {
-                        currentRobot.sourceInfo.localVersion = localVersion;
 
-                        await this.runner.saveRobot(currentRobot.id, {
-                            sourceInfo: currentRobot.sourceInfo
-                        });
-                    }
                 }
-
+                clearInterval(this.checkInterval);
+                this.checkInterval = setInterval(async () => {
+                    await updateVersions();
+                }, 60*10*1000);
+                updateVersions();
             }
-            clearInterval(this.checkInterval);
-            this.checkInterval = setInterval(async () => {
-                await updateVersions();
-            }, 60*10*1000);
-            updateVersions();
+            catch(e) {
+                console.error("Error checking for updates: ", e);
+            }
+
         });
     }
 
@@ -85,22 +102,19 @@ export default abstract class SourceService {
     async initialize() {
         return new Promise<void>(async (resolve, reject) => {
             try {
-                if (this.robot.enabled) {
-                    if (!fs.existsSync(this.basePath)) {
-                        fs.mkdirSync(this.basePath);
-                    }
-                    this.targetPath = this.basePath + "/" + this.robot.id.toString();
-                    if (!fs.existsSync(this.targetPath)) {
-                        fs.mkdirSync(this.targetPath);
-                        this.onDirectoryCreated(this.targetPath);
-                    }
-
-                    if (!await this.isSourceAvailable()) {
-                        return resolve(await this.downloadSourceAndCheckForUpdates());
-                    }
-
-                    this.checkForUpdates();
+                if (!fs.existsSync(this.basePath)) {
+                    fs.mkdirSync(this.basePath);
                 }
+                if (!fs.existsSync(this.getFullTargetPath())) {
+                    fs.mkdirSync(this.getFullTargetPath());
+                    this.onDirectoryCreated(this.getFullTargetPath());
+                }
+
+                if (!await this.isSourceAvailable()) {
+                    return resolve(await this.downloadSourceAndCheckForUpdates());
+                }
+
+                this.checkForUpdates();
 
                 return resolve();
             }
@@ -116,6 +130,14 @@ export default abstract class SourceService {
 
     abstract isSourceAvailable() : Promise<boolean>;
 
-    abstract getSourceVersion() : Promise<string>;
+    abstract getSourceVersion() : Promise<{
+        sourceVersion: string;
+        sourceMessage: string;
+    }>;
+
     abstract getLocalVersion() : Promise<string>;
+
+    abstract reloadVersions(): Promise<ISourceInfo>
+
+    abstract updateSource(): Promise<ISourceInfo>;
 }

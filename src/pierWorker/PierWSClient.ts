@@ -30,9 +30,11 @@ export class PierWSClient {
             connection.on('error', (error) => {
                 console.log("Connection error: " + error.toString());
             });
-
             connection.on('close', () => {
                 console.log('Connection closed!');
+                setTimeout(() => {
+                    this.connect();
+                }, 1500);
             });
 
             connection.on('message', (message) => {

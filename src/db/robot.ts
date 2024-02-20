@@ -3,6 +3,8 @@ import {IPier} from "../models/pier/types";
 import {BotType, IRobot, ISourceInfo} from "../models/robot/types";
 import {Pier} from "./pier.model";
 import {Sequelize} from "sequelize";
+import {ISwarm} from "../../client/src/models/swarm/ISwarm";
+import {SwarmModel} from "./swarm.model";
 
 @Table
 export class Robot extends Model implements IRobot {
@@ -53,5 +55,11 @@ export class Robot extends Model implements IRobot {
 
     @Column({})
     enabled: boolean;
+
+    @Column({})
+    swarmID: number;
+
+    @BelongsTo(() => SwarmModel, 'swarmID')
+    swarm: ISwarm;
 
 }

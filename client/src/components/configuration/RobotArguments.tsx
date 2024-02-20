@@ -21,7 +21,7 @@ const RoboArguments = (props: {bot: any, onChange: (config: any, bot: any) => vo
                     <div className={"alert alert-danger"}>
                         <h4 className={"fg-danger"}>No robot arguments found</h4>
                         <h5>Normally you can configure your robot with a easy user interface here. But we have not found a ".robot"
-                            File in your repository. Create on and see the values here. <a href={"#"}>(Read more here)</a></h5>
+                            File in your repository. Create one and see the values here. <a href={"#"}>(Read more here)</a></h5>
                     </div>
                 </div>
             </div>}

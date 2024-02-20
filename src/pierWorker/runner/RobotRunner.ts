@@ -1,11 +1,12 @@
-import PierWorkerService from "./PierWorkerService";
-import {IRobot} from "../models/robot/types";
+import PierWorkerService from "../PierWorkerService";
+import {IRobot} from "../../models/robot/types";
 import {Logger} from "@nestjs/common";
-import {IMessage, MessageBuilder, MessageTypes} from "../harbor/socket.service";
-import RobotFactory from "./RoboFactory";
-import SourceService from "./source/SourceService";
-import SourceFactory from "./source/SourceFactory";
-import {LogLevel} from "../models/other/types";
+import {IMessage, MessageBuilder, MessageTypes} from "../../harbor/socket.service";
+import RobotFactory from "../RoboFactory";
+import SourceService from "../source/SourceService";
+import SourceFactory from "../source/SourceFactory";
+import {LogLevel} from "../../models/other/types";
+import * as fs from "fs";
 
 export interface IRobotRunner {
 
@@ -29,6 +30,7 @@ export interface IRobotRunner {
 
     startRobot(): Promise<any>;
 
+    updateRobot(robot: IRobot): Promise<void>;
 
     saveRobot(robotId: number, fieldsToUpdate: any): Promise<IRobot>;
 }
@@ -43,6 +45,7 @@ export abstract class RobotRunner implements IRobotRunner {
     private sourceService: SourceService;
     private logTimeout: any = null;
     private lastSendLog: number;
+    private loggedData: string[] = [];
 
     constructor(service: PierWorkerService, robot: IRobot) {
         this.service = service;
@@ -64,8 +67,21 @@ export abstract class RobotRunner implements IRobotRunner {
 
     }
 
-    onRobotUpdated(robot: IRobot) {
+    getFullTargetPath() {
+        return process.cwd() + "/.robotSources/" + this.robot.id.toString();
+    }
 
+    onRobotUpdated(robot: IRobot) {
+        return new Promise<void>(async (resolve, reject) => {
+            try {
+                if (this.sourceService) {
+                    this.sourceService.checkForUpdates();
+                }
+                return resolve();
+            } catch (e) {
+                reject(e);
+            }
+        });
     }
 
     abstract isRunning(): boolean ;
@@ -102,9 +118,39 @@ export abstract class RobotRunner implements IRobotRunner {
                 }
                 return this.startRobot();
             }
+            else if (message.type === MessageTypes.RELOAD_ROBOT_SOURCE) {
+                return this.sourceService.reloadVersions()
+                    .then((sourceInfo: any) => {
+                        return {
+                            success: true,
+                            sourceInfo: sourceInfo,
+                        };
+                    })
+                    .catch((e) => {
+                        return Promise.reject(e);
+                    });
+            }
+            else if (message.type === MessageTypes.UPDATE_ROBOT_SOURCE) {
+                return this.sourceService.updateSource()
+                    .then((sourceInfo: any) => {
+                        return {
+                            success: true,
+                            sourceInfo: sourceInfo,
+                        };
+                    })
+                    .catch((e) => {
+                        return Promise.reject(e);
+                    });
+            }
+            else {
+                return Promise.resolve({
+                    success: false,
+
+                });
+            }
         }
         catch(e) {
-            Promise.reject(e);
+            return Promise.reject(e);
         }
 
 
@@ -113,6 +159,8 @@ export abstract class RobotRunner implements IRobotRunner {
     getRobot(): IRobot {
         return this.robot;
     }
+
+
 
     abstract triggerManualRun(): Promise<{
         success: boolean,
@@ -175,14 +223,13 @@ export abstract class RobotRunner implements IRobotRunner {
 
     public log(level: LogLevel, data: string) {
         this.logger.log(data);
+        this.loggedData.push(data);
+
         const sendLogMessages = () => {
-            this.service.sendMessage(this, MessageBuilder.robotLog(this.robot, level, data));
+            this.service.sendMessage(this, MessageBuilder.robotLog(this.robot, level, this.loggedData.join("\n")));
             this.lastSendLog = new Date().getTime();
+            this.loggedData = [];
         }
-        clearTimeout(this.logTimeout);
-        this.logTimeout = setTimeout(() => {
-            sendLogMessages();
-        }, 200);
         if (!this.lastSendLog || (this.lastSendLog && (new Date().getTime() - this.lastSendLog) > 2000)) {
             sendLogMessages();
             this.lastSendLog = new Date().getTime();
@@ -206,6 +253,21 @@ export abstract class RobotRunner implements IRobotRunner {
         }
     }
 
+    readPortFile() {
+        try {
+            const portFile = this.getFullTargetPath() + "/.roboport";
+            if (fs.existsSync(portFile)) {
+                const dataJSON = fs.readFileSync(portFile, 'utf8');
+                const data = JSON.parse(dataJSON);
+                return data.port;
+            }
+        }
+        catch(e) {
+
+        }
+        return null;
+    }
+
     private async initializeSource() {
         return new Promise<void>(async (resolve, reject) => {
             try {
@@ -219,6 +281,7 @@ export abstract class RobotRunner implements IRobotRunner {
             }
         });
     }
+
 
     saveRobot(robotId: number, fieldsToUpdate: any): Promise<IRobot> {
         return new Promise<IRobot>(async (resolve, reject) => {

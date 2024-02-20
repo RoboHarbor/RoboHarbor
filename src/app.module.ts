@@ -19,26 +19,33 @@ import {Robot} from "./db/robot";
 import {AppLogws} from "./app.logws";
 import {LogModule} from "./log/log.module";
 import {Log} from "./db/log.model";
+import {Credentials} from "./db/credentials.model";
+import {SwarmModel} from "./db/swarm.model";
 
 @Module({
   controllers: [AppController],
   providers: [AppGateway, AppLogws, AppService],
   exports: [AppService],
   imports: [
-    ConfigModule.forRoot({isGlobal: true}),  SequelizeModule.forRoot({
-    dialect: 'postgres',
-    host: process.env.DB_HOST,
-    port: 5432,
-    username: process.env.DB_USER,
-    password: process.env.DB_PASS,
-    database: process.env.DB,
-    models: [User, Pier, RunnerPackage, Robot, Log],
-    autoLoadModels: true,
-    synchronize: true,
-    sync: {
-        alter: true
-    }
-  }), LogModule, UiModule, PiersModule, RobotsModule,
+    ConfigModule.forRoot({isGlobal: true}),
+    SequelizeModule.forRoot({
+      dialect: 'postgres',
+      host: process.env.DB_HOST,
+      port: 5432,
+      username: process.env.DB_USER,
+      password: process.env.DB_PASS,
+      database: process.env.DB,
+      models: [User, Pier, RunnerPackage, Robot, SwarmModel, Log, Credentials],
+      autoLoadModels: true,
+      synchronize: true,
+      sync: {
+          alter: true
+      }
+    }),
+    LogModule,
+    UiModule,
+    PiersModule,
+    RobotsModule,
 
     DevtoolsModule.register({
       http: process.env.NODE_ENV !== 'production',

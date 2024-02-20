@@ -1,5 +1,5 @@
 import {IRobot} from "../models/robot/types";
-import {IRobotRunner} from "./RobotRunner";
+import {IRobotRunner} from "./runner/RobotRunner";
 import ShellRobotRunner from "./runner/ShellRobotRunner";
 import {RoboHarborError} from "../errors/RoboHarborError";
 import PythonRobotRunner from "./runner/PythonRobotRunner";

@@ -24,6 +24,14 @@ const MENU_ITEMS: MenuItemTypes[] = [
         url: '/harbor',
     },
     {
+        key: 'fleets',
+        label: 'Fleets',
+        isTitle: false,
+        icon: 'mdi mdi-group',
+        badge: { variant: 'success', text: '9+' },
+        url: '/fleets',
+    },
+    {
         key: 'piers',
         label: 'Piers',
         isTitle: false,

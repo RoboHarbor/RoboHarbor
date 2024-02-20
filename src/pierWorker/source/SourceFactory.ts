@@ -3,7 +3,7 @@ import SourceService from "./SourceService";
 import GitSourceService from "./GitSourceService";
 import DockerSourceService from "./DockerSourceService";
 import ShellSourceService from "./ShellSourceService";
-import {IRobotRunner} from "../RobotRunner";
+import {IRobotRunner} from "../runner/RobotRunner";
 
 export default class SourceFactory {
 

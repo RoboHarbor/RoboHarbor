@@ -108,7 +108,7 @@ export class UiService {
                 name: "python",
                 description: "Python script",
                 title: "Python",
-                version: "1.0.6",
+                version: "1.0.8",
                 attributes: [
                     {
                         name: "pythonVersion",
@@ -131,6 +131,11 @@ export class UiService {
                                 label: "3.6"
                             }
                         ]
+                    },
+                    {
+                        name: "script",
+                        type: "robo_file",
+                        label: "Python Script"
                     }
                 ],
                 parameters: true,

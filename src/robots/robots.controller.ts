@@ -1,4 +1,4 @@
-import {Body, Controller, Get, HttpException, Logger, Param, Post, Put} from '@nestjs/common';
+import {Body, Controller, Delete, Get, HttpException, Logger, Param, Post, Put} from '@nestjs/common';
 import {ApiOperation, ApiTags} from "@nestjs/swagger";
 import {RoboHarborError} from "../errors/RoboHarborError";
 import {HarborService} from "../harbor/harbor.service";
@@ -11,6 +11,71 @@ export class RobotsController {
     private readonly logger = new Logger(RobotsController.name);
 
     constructor(readonly robotService: RobotsService) {
+    }
+
+    @Get("/credentials")
+    @ApiOperation({summary: "get all credentials"})
+    async getAllCredentials(): Promise<any> {
+        try {
+            const creds = await this.robotService.getAllCredentials();
+
+            return creds.map((cred: any) => {
+                return {
+                    id: cred.id,
+                    name: cred.name,
+                    username: cred.username,
+                    type: cred.username && cred.password ? "http" : "ssh"
+                }
+            });
+        } catch (e) {
+            this.logger.error("credentials creation error: ", e);
+            if (e instanceof RoboHarborError) {
+                throw e.getHttpException();
+            }
+            throw new HttpException(e.message, e.status);
+        }
+    }
+
+    @Post("/reloadSource/:id")
+    @ApiOperation({summary: "reload source by id"})
+    async reloadSource(@Param("id") id: string): Promise<any> {
+        try {
+            return await this.robotService.reloadSource(id);
+        } catch (e) {
+            this.logger.error("source reload error: ", e);
+            if (e instanceof RoboHarborError) {
+                throw e.getHttpException();
+            }
+            throw new HttpException(e.message, e.status);
+        }
+    }
+
+    @Delete("/:id")
+    @ApiOperation({summary: "delete robot by id"})
+    async deleteRobotById(@Param("id") id: string): Promise<any> {
+        try {
+            return await this.robotService.deleteRobotById(id);
+        } catch (e) {
+            this.logger.error("robot delete error: ", e);
+            if (e instanceof RoboHarborError) {
+                throw e.getHttpException();
+            }
+            throw new HttpException(e.message, e.status);
+        }
+    }
+
+    @Post("/credentials")
+    @ApiOperation({summary: "create credentials"})
+    async createCredentials(@Body() credentials: any): Promise<any> {
+        try {
+            return await this.robotService.createCredentials(credentials);
+        } catch (e) {
+            this.logger.error("credentials creation error: ", e);
+            if (e instanceof RoboHarborError) {
+                throw e.getHttpException();
+            }
+            throw new HttpException(e.message, e.status);
+        }
     }
 
     @Get("/")
@@ -60,7 +125,10 @@ export class RobotsController {
     @ApiOperation({summary: "update robot"})
     async updateRobot(@Param("id") id: string, @Body() bot: any): Promise<any> {
         try {
-            return await this.robotService.updateRobot(id, bot);
+            return await this.robotService.updateRobot(id, bot)
+                .catch((e) => {
+                    throw e;
+                });
         } catch (e) {
             this.logger.error("robot update error: ", e);
             if (e instanceof RoboHarborError) {
@@ -110,5 +178,34 @@ export class RobotsController {
             throw new HttpException(e.message, e.status);
         }
     }
+
+    @Post("/deleteRobot/:id")
+    @ApiOperation({summary: "delete robot by id"})
+    async deleteRobot(@Param("id") id: string): Promise<any> {
+        try {
+            return await this.robotService.deleteRobot(id);
+        } catch (e) {
+            this.logger.error("robot creation error: ", e);
+            if (e instanceof RoboHarborError) {
+                throw e.getHttpException();
+            }
+            throw new HttpException(e.message, e.status);
+        }
+    }
+
+    @Post("/updateSource/:id")
+    @ApiOperation({summary: "update source by id"})
+    async updateSource(@Param("id") id: string): Promise<any> {
+        try {
+            return await this.robotService.updateSource(id);
+        } catch (e) {
+            this.logger.error("source update error: ", e);
+            if (e instanceof RoboHarborError) {
+                throw e.getHttpException();
+            }
+            throw new HttpException(e.message, e.status);
+        }
+    }
+
 
 }

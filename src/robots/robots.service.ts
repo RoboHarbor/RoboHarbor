@@ -10,6 +10,8 @@ import {Pier} from "../db/pier.model";
 import {RoboHarborError} from "../errors/RoboHarborError";
 import {uniqueNamesGenerator, adjectives, colors, animals, Config} from 'unique-names-generator';
 import {Log} from "../db/log.model";
+import {Credentials} from "../db/credentials.model";
+import RobotFactory from "../pierWorker/RoboFactory";
 const config: Config = {
     dictionaries: [adjectives, colors, animals],
     separator: '-',
@@ -26,6 +28,8 @@ export class RobotsService {
     private lastTimeSaved: Date;
 
     constructor(readonly socketService: SocketService,
+                @InjectModel(Credentials)
+                private credentialsModel: typeof Credentials,
                 @InjectModel(RunnerPackage)
                 private runnerPackageModel: typeof RunnerPackage,
                 @InjectConnection()
@@ -34,13 +38,31 @@ export class RobotsService {
                 private pierModel: typeof Pier,) {
     }
 
+    attachFullInformationToRobot(bot: IRobot) {
+        return new Promise(async (resolve, reject) => {
+            if (bot.source?.credentials) {
+                bot.source.credentials = await this.credentialsModel.findOne({
+                    where: {
+                        id: bot.source.credentials.id
+                    }
+                });
+            }
+            return resolve(bot);
+        });
+    }
+
     async validateRobot(bot: any) {
         const pierId = this.socketService.getBestPier();
         if (pierId) {
             this.logger.log("Robot validated, pierId: " + pierId);
 
+            bot = await this.attachFullInformationToRobot(bot);
             return this.socketService.sendMessageWithResponse(pierId, MessageBuilder.validateRobotMessage(pierId, bot))
                 .then((res) => {
+                    if (res.isError) {
+                        throw new RoboHarborError(res.error_code, res.error, res);
+                        return;
+                    }
                     return {
                         pierId: pierId,
                         ...res.response
@@ -145,6 +167,9 @@ export class RobotsService {
             })
                 .then((res) => {
                     this.socketService.sendMessageWithoutResponse(pierId, MessageBuilder.reloadRobots())
+                        .catch((e) => {
+                            this.logger.error("Error reloading robots: ", e);
+                        });
                   return res;
                 })
                 .then((res) => {
@@ -176,7 +201,39 @@ export class RobotsService {
             where: {
                 id: id
             }
+        })
+        .then((res) => {
+            if (res) {
+                return res;
+            }
+            throw new RoboHarborError(404, "Robot not found");
         });
+    }
+
+    async getRobotPopulated(id: string) {
+        return Robot.findOne({
+            where: {
+                id: id
+            }
+        })
+        .then((res) => {
+            if (res) {
+                return this.expandRobotDetails(res);
+            }
+            throw new RoboHarborError(404, "Robot not found");
+        });
+    }
+
+    async reloadSource(id: string) {
+        const robot = await this.getRobot(id.toString());
+        if (!robot) {
+            throw new RoboHarborError(404, "Robot not found");
+        }
+        return this.socketService.sendMessageToRobotWithResponse(robot, MessageBuilder.reloadSourceMessage(robot))
+            .then((res: any) => {
+                robot.sourceInfo = res.sourceInfo;
+                return robot.save();
+            });
     }
 
     async runRobot(id: string) {
@@ -216,6 +273,93 @@ export class RobotsService {
         robot.config = bot.config;
         robot.type = bot.type;
         await robot.save();
+        const pierOd = robot.pierId;
+        const pier = await this.pierModel.findOne({where: {id: pierOd}});
+        if (pier) {
+            this.socketService.sendMessageWithoutResponse(pier.identifier, MessageBuilder.reloadRobots())
+                .catch((e) => {
+                    this.logger.error("Error reloading robots: ", e);
+                });
+        }
+
         return robot;
+    }
+
+    async deleteRobot(id: string) {
+        const robot = await this.getRobot(id);
+        if (!robot) {
+            throw new RoboHarborError(404, "Robot not found");
+        }
+        await robot.destroy();
+        return robot;
+    }
+
+    async getAllCredentials(columns: string[] = []) {
+        const options = {
+            nest: true,
+
+        };
+        if (columns.length > 0) {
+            options['attributes'] = columns;
+        }
+        return this.credentialsModel.findAll(options);
+    }
+
+    async createCredentials(credentials: any) {
+        return this.credentialsModel.create(credentials);
+    }
+
+    async updateSource(id: string) {
+        const robot = await this.getRobot(id);
+        if (!robot) {
+            throw new RoboHarborError(404, "Robot not found");
+        }
+        return this.socketService.sendMessageToRobotWithResponse(robot, MessageBuilder.updateSourceMessage(robot))
+            .then((res) => {
+                return res;
+            });
+    }
+
+    async deleteRobotById(id: string) {
+        const robot = await this.getRobot(id);
+        if (!robot) {
+            throw new RoboHarborError(404, "Robot not found");
+        }
+        return this.socketService.sendMessageToRobotWithResponse(robot, MessageBuilder.deleteRobotMessage(robot))
+            .then((res) => {
+                Robot.destroy({
+                    where: {
+                        id: id
+                    }
+                });
+                return res;
+            });
+    }
+
+    expandRobotDetails(r: IRobot) {
+        return new Promise(async (resolve, reject) => {
+           try {
+               if (r.source) {
+                   if (r.source.credentials) {
+                       try {
+                           const credentials = (await this.credentialsModel.findOne({
+                               where: {
+                                   id: r.source.credentials.id
+                               },
+                               nest: true
+                           }));
+                           r.source.credentials = credentials ? credentials.dataValues : null;
+                       }
+                       catch(e) {}
+
+                   }
+               }
+               return resolve(r);
+           }
+          catch(e) {
+              this.logger.error("Error expanding robot details: ", e);
+              return resolve(r);
+          }
+        });
     }
 }

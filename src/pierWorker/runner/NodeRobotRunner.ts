@@ -1,4 +1,4 @@
-import {RobotRunner} from "../RobotRunner";
+import {RobotRunner} from "./RobotRunner";
 
 export default class NodeRobotRunner extends RobotRunner {
 

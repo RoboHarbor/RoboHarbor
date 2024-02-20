@@ -9,6 +9,7 @@ import HorizontalLayout from '../layouts/Horizontal';
 // components
 import PrivateRoute from './PrivateRoute';
 import Root from './Root';
+import RobotDetail from '../pages/Robo/index';
 
 // constants
 import { LayoutTypes } from '../constants';
@@ -24,11 +25,12 @@ const Confirm = React.lazy(() => import('../pages/auth/Confirm'));
 const ForgetPassword = React.lazy(() => import('../pages/auth/ForgetPassword'));
 const LockScreen = React.lazy(() => import('../pages/auth/LockScreen'));
 const Logout = React.lazy(() => import('../pages/auth/Logout'));
+const Fleets = React.lazy(() => import('../pages/Fleet'));
+const SystemSettings = React.lazy(() => import('../pages/systemsettings'));
 
 // dashboards
 const DashBoard1 = React.lazy(() => import('../pages/dashboards/DashBoard1'));
 
-const TaskDetail = React.lazy(() => import('../pages/Robo'));
 const Piers = React.lazy(() => import('../pages/Piers'));
 const Projects = React.lazy(() => import('../pages/Harbor'));
 
@@ -100,13 +102,21 @@ const AllRoutes = () => {
 
             {
               path: 'robots/:id',
-              element: <LoadComponent component={TaskDetail} />,
+              element: <RobotDetail  />,
             },
             {
               path: '',
               element: <LoadComponent component={Projects} />,
             }
           ],
+        },
+        {
+          path: "systemsettings",
+            element: <LoadComponent component={SystemSettings} />,
+        },
+        {
+          path: 'fleets',
+          element: <LoadComponent component={Fleets} />,
         },
         {
           path: 'piers',

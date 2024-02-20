@@ -11,6 +11,7 @@ import {Robot} from "../db/robot";
 import {IRobot} from "../models/robot/types";
 import {LogLevel} from "../models/other/types";
 import {LogWSService} from "../log/logws.service";
+import {cleanRobotData} from "../helper/robo";
 
 const WAIT_FOR_REGISTRATION = 5000;
 
@@ -22,6 +23,7 @@ export interface IMessage {
     responseId?: string,
     isResponse?: boolean,
     waitForResponse?: boolean,
+    isError?: boolean,
     [key: string]: any
 }
 
@@ -48,7 +50,9 @@ export enum MessageTypes {
     ROBOT_CRASHED = "robotCrashed",
     UPDATE_ROBOT = "updateRobot",
     ROBOT_UPDATED = "robotUpdated",
-
+    RELOAD_ROBOT_SOURCE = "reloadRobotSource",
+    UPDATE_ROBOT_SOURCE = "updateRobotSource",
+    DELETE_ROBOT = "deleteRobot"
 
 }
 
@@ -106,6 +110,7 @@ export class MessageBuilder {
         return {
             type: MessageTypes.REGISTERED_FAILED,
             success: "false",
+            isError: true,
             error: s,
             description: "Error in registration "+s,
         };
@@ -155,7 +160,9 @@ export class MessageBuilder {
     static errorRobotMessage(socketId: string, pierId: any, message) {
         return {
             type: MessageTypes.ERROR_ROBOT_MESSAGE,
-
+            error: message,
+            isError: true,
+            pierId: pierId
         }
     }
 
@@ -202,6 +209,27 @@ export class MessageBuilder {
             robot: robot,
             targetRobot: robot.id
         }
+    }
+
+    static reloadSourceMessage(robot: Robot) {
+        return {
+            type: MessageTypes.RELOAD_ROBOT_SOURCE,
+            targetRobot: robot.id,
+        };
+    }
+
+    static updateSourceMessage(robot: Robot) {
+        return {
+            type: MessageTypes.UPDATE_ROBOT_SOURCE,
+            targetRobot: robot.id,
+        };
+    }
+
+    static deleteRobotMessage(robot: Robot) {
+        return {
+            type: MessageTypes.DELETE_ROBOT,
+            targetRobot: robot.id
+        };
     }
 }
 
@@ -315,11 +343,18 @@ export class SocketService {
             }
             else if (message.type === MessageTypes.GET_PIER_DETAILS) {
                 const pierId = this.getSocketId(socket);
-                this.pierService.getPier(pierId).then((res) => {
+                this.pierService.getPier(pierId).then(async (res) => {
+                    const r = JSON.parse(JSON.stringify(res));
+                    r.robots = r.robots.map((r) => {
+                        return cleanRobotData(r);
+                    });
+                    r.robots = await Promise.all(r.robots.map(async (r) => {
+                        return await this.robotsService.expandRobotDetails(r);
+                    }));
                     this.sendMessage(socket, {
                         responseId: message.responseId,
                         type: MessageTypes.PIER_DETAILS,
-                        piers: res,
+                        piers: r,
                         isResponse: true,
                     });
                 });
@@ -459,7 +494,7 @@ export class SocketService {
                 robotData = robot;
             }
             runRobotMessage.targetRobot = robotData.id;
-            runRobotMessage.robot = robotData;
+            runRobotMessage.robot = cleanRobotData(robotData);
             const pier = await this.pierModel.findOne({where: {id: robotData.pierId}});
             return this.sendMessageWithResponse(pier.identifier, runRobotMessage)
                 .then((res) => {

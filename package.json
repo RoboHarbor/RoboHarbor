@@ -27,6 +27,7 @@
     "@nestjs/config": "^3.1.1",
     "@nestjs/core": "^10.0.0",
     "@nestjs/devtools-integration": "^0.1.5",
+    "forked_proc_socket": "^1.0.3",
     "@nestjs/platform-express": "^10.0.0",
     "@nestjs/platform-socket.io": "^10.3.0",
     "@nestjs/platform-ws": "^10.3.0",
@@ -39,6 +40,7 @@
     "rxjs": "^7.8.1",
     "sequelize": "^6.35.2",
     "sequelize-typescript": "^2.1.6",
+    "spawn-command": "^0.0.2",
     "unique-names-generator": "^4.7.1",
     "websocket": "^1.0.34"
   },
