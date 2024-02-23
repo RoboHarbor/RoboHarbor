@@ -20,6 +20,9 @@ export interface ICredentialsInfo{
 }
 
 export interface IRobot {
+    windowJson?: any;
+    updatedAt?: Date;
+
     identifier?: string;
     source: {
         url: string;

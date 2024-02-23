@@ -5,6 +5,7 @@ enum PageTitleAction {
 export type PageTitleState = {
     pageTitle: {
         title: string;
+        actions?: any[];
         breadCrumbItems: {
             label: string;
             path: string;

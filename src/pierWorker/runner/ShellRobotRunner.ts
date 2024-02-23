@@ -14,8 +14,29 @@ export default class ShellRobotRunner extends RobotRunner {
         return this.myShellScript !== null;
     }
 
+    buildArguments() {
+        let args = "";
+        if (this.robot.runner?.config?.arguments && this.robot.runner.config.arguments.entries?.length > 0) {
+            args = " " + this.robot.runner.config.arguments.entries?.map((e) => {
+                return e.key && e.key.length > 0 ? e.key+"='"+e.value+"'" : e.value;
+            }).join(" ");
+        }
+        return args;
+    }
+
+    buildEnvVariables() {
+        let env = "";
+        if (this.robot.runner?.config?.env && Object.keys(this.robot.runner.config.env).length > 0) {
+            env = Object.keys(this.robot.runner?.config?.env).map((e) => {
+                const val = this.robot.runner.config.env[e];
+                return e+"="+val;
+            }).join(";");
+        }
+        return env;
+    }
+
     getRobotCommand(): string {
-        return this.robot?.runner?.config?.attributes?.command;
+        return this.buildEnvVariables()+";"+this.robot?.runner?.config?.attributes?.command+this.buildArguments();
     }
 
     runShellCommand(command: string, log: (l: string) => void, error: (e: string) => void, onExit: (code: number) => void) : Promise<{
@@ -65,6 +86,7 @@ export default class ShellRobotRunner extends RobotRunner {
         }>(async (resolve, reject) => {
             try {
 
+
                 const robotCOmmand = this.getRobotCommand();
 
                 if (!robotCOmmand) {
@@ -88,18 +110,27 @@ export default class ShellRobotRunner extends RobotRunner {
                     }
                 }
 
+                let commandStarted = false;
+
                 if (!port) {
+                    try {
+                        await this.onBeforeShellStart();
+                    }
+                    catch(e) {
+
+                    }
                     const d = child_process.spawn("/bin/bash", ["-ic", "forked_proc_socket '"+robotCOmmand+"' &","disown"], {
                         cwd: this.getFullTargetPath(),
                         detached: true,
                         stdio: ['ignore', 'ignore', 'ignore']
                     });
+                    commandStarted = true;
                     d.unref();
                 }
 
                 // wait for 2 seconds until process started and then read
                 // the file ".roboport" to get the port number
-                await new Promise((resolve) => {    setTimeout(resolve, 2000); });
+                await new Promise((resolve) => {    setTimeout(resolve, 400); });
 
                 port = this.readPortFile();
 
@@ -119,7 +150,7 @@ export default class ShellRobotRunner extends RobotRunner {
                     },
                     (log: string) => {
                         this.log(LogLevel.ERROR, log);
-                    });
+                    }, commandStarted);
 
 
 
@@ -165,6 +196,10 @@ export default class ShellRobotRunner extends RobotRunner {
                 success: false,
             });
         }
+    }
+
+    onBeforeShellStart() : Promise<boolean> {
+        return Promise.resolve(true);
     }
 
     installDependencies() {
@@ -239,11 +274,16 @@ export default class ShellRobotRunner extends RobotRunner {
         });
     }
 
-    private connectToWebsocket(port: string, param2: (log: string) => void, param3: (log: string) => void) {
+    private connectToWebsocket(port: string, param2: (log: string) => void, param3: (log: string) => void, sendStart=false) {
         const ws = new WebSocket('ws://localhost:' + port);
         const _this = this;
         ws.on('open', function (event) {
-            param2('Connected to websocket');
+            if (sendStart) {
+                ws.send(JSON.stringify({
+                    command: "start",
+                    commandString: _this.getRobotCommand()
+                }));
+            }
         });
         ws.on('message', function (event) {
             try {

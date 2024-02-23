@@ -4,6 +4,7 @@ import { PageTitleAction, PageTitleState } from './constants';
 const INIT_STATE = {
     pageTitle: {
         title: '',
+        actions: [],
         breadCrumbItems: [
             {
                 label: '',
@@ -19,6 +20,7 @@ const PageTitle = (
         type: PageTitleAction;
         payload: {
             title: string;
+            actions: any[];
             breadCrumbItems: {
                 label: string;
                 path: string;

@@ -41,11 +41,11 @@ const MENU_ITEMS: MenuItemTypes[] = [
     },
     {
         key: 'dashboard',
-        label: 'Analytics',
+        label: 'Operations Center',
         isTitle: false,
         icon: 'mdi mdi-chart-bar',
         badge: { variant: 'success', text: '9+' },
-        url: '/dashboard',
+        url: '/operations-center',
     },
 ];
 

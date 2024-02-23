@@ -46,7 +46,9 @@ import {SwarmModel} from "./db/swarm.model";
     UiModule,
     PiersModule,
     RobotsModule,
-
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '../public'),
+    }),
     DevtoolsModule.register({
       http: process.env.NODE_ENV !== 'production',
       port: 9330

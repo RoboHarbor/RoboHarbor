@@ -5269,6 +5269,11 @@ flatted@^3.1.0:
   resolved "https://registry.npmjs.org/flatted/-/flatted-3.2.5.tgz"
   integrity sha512-WIWGi2L3DyTUvUrwRKgGi9TwxQMUEqPOPQBVi71R96jZXJdFskXEmf54BoZaS1kknGODoIGASGEzBUYdyMCBJg==
 
+flexlayout-react@^0.7.15:
+  version "0.7.15"
+  resolved "https://registry.yarnpkg.com/flexlayout-react/-/flexlayout-react-0.7.15.tgz#9b6a06e8dec82db78d61bd246f1f002ddf3f74f4"
+  integrity sha512-ydTMdEoQO5BniylxVkSxa59rEY0+96lqqRII+QK+yq6028eHywPuxZawt4g45y5pMb9ptP4N9HPAQXAFsxwowQ==
+
 focus-lock@^0.10.2:
   version "0.10.2"
   resolved "https://registry.yarnpkg.com/focus-lock/-/focus-lock-0.10.2.tgz#561c62bae8387ecba1dd8e58a6df5ec29835c644"

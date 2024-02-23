@@ -2,6 +2,9 @@ import {IMessage, MessageBuilder} from "../harbor/socket.service";
 
 const WebSocketClient = require('websocket').client;
 
+const HARBOR_PORT : any  = process.env.HARBORPORT ? process.env.HARBORPORT : 5001;
+const HARBOR_URL : any = process.env.HARBOR_URL ? process.env.HARBOR_URL : "localhost";
+
 export interface IPierWSListener {
 
     onMessage(msg: IMessage): void;
@@ -19,7 +22,7 @@ export class PierWSClient {
     }
 
     public connect() {
-        console.log("Connecting to harbor: "+process.env.HARBOR_URL+":"+process.env.HARBOR_PORT);
+        console.log("Connecting to harbor: "+HARBOR_URL+":"+HARBOR_PORT);
         this.ws = new WebSocketClient();
         this.ws.on('connectFailed', function(error) {
             console.log('Connect Error: ' + error.toString());
@@ -58,7 +61,7 @@ export class PierWSClient {
             this.connection = connection;
         });
 
-        this.ws.connect("ws://"+process.env.HARBOR_URL+":"+process.env.HARBOR_PORT);
+        this.ws.connect("ws://"+HARBOR_URL+":"+HARBOR_PORT);
 
 
     }

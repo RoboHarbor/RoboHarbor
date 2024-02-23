@@ -8,11 +8,11 @@ export default class PythonRobotRunner extends ShellRobotRunner {
 
 
     getRobotCommand(): string {
-        return 'python3 -u ' +this.robot?.runner?.config?.attributes?.script;
+        return this.buildEnvVariables()+' python3 -u ' +this.robot?.runner?.config?.attributes?.script+" "+this.buildArguments();
     }
 
-    async runShell(): Promise<{ success: boolean }> {
-        return new Promise<{ success: boolean }>(async (resolve, reject) => {
+    onBeforeShellStart()  {
+        return new Promise<boolean>(async (resolve, reject) => {
             try {
 
                 if (this.fileExists("requirements.txt")) {
@@ -29,15 +29,14 @@ export default class PythonRobotRunner extends ShellRobotRunner {
                 }
 
 
-                return super.runShell().then((result) => {
-                    resolve(result);
-                });
+                return resolve(true);
             }
             catch (e) {
                 reject(e);
             }
         });
     }
+
 
     getName(): string {
         return "PythonRobotRunner";

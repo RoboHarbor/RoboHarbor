@@ -244,6 +244,13 @@
     }
 }
 
+.page-title-container {
+    display: flex;
+    vertical-align: middle;
+    align-items: center;
+    height: 70px;
+}
+
 .page-title-main {
     margin: 0;
     line-height: 70px;

@@ -123,7 +123,7 @@ const AllRoutes = () => {
           element: <LoadComponent component={Piers} />,
         },
         {
-          path: 'dashboard',
+          path: 'operations-center',
           element: <LoadComponent component={DashBoard1} />,
         },
       ],

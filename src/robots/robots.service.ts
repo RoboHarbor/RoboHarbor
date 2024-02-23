@@ -267,11 +267,24 @@ export class RobotsService {
         if (!robot) {
             throw new RoboHarborError(404, "Robot not found");
         }
-        robot.name = bot.name;
-        robot.source = bot.source;
-        robot.runner = bot.runner;
-        robot.config = bot.config;
-        robot.type = bot.type;
+        if (bot.name) {
+            robot.name = bot.name;
+        }
+        if (bot.source) {
+            robot.source = bot.source;
+        }
+        if (bot.windowJson) {
+            robot.windowJson = bot.windowJson;
+        }
+        if (bot.runner) {
+            robot.runner = bot.runner;
+        }
+        if (bot.config) {
+            robot.config = bot.config;
+        }
+        if (bot.type) {
+            robot.type = bot.type;
+        }
         await robot.save();
         const pierOd = robot.pierId;
         const pier = await this.pierModel.findOne({where: {id: pierOd}});

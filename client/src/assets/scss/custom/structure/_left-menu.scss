@@ -14,7 +14,8 @@
     margin-left: $leftbar-width;
     overflow: hidden;
     padding: 0 12px 65px 12px;
-    min-height: 80vh;
+    display: flex;
+    min-height: 90vh;
     margin-top: $topbar-height;
 }
 

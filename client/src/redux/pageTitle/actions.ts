@@ -3,6 +3,7 @@ import { PageTitleAction } from './constants';
 
 export const changePageTitle = (pageTitle: {
     title: string;
+    actions?: any[],
     breadCrumbItems: {
         label: string;
         path: string;

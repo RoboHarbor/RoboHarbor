@@ -132,8 +132,13 @@ const Topbar = ({ openLeftMenuCallBack, containerClass }: TopbarProps) => {
                     )}
 
                     {layout === LayoutTypes.LAYOUT_VERTICAL && (
-                        <li>
+                        <li className={"page-title-container"}>
                             <h4 className="page-title-main">{pageTitle.title}</h4>
+                            <div>
+                            {pageTitle.actions?.map((action: any, index: number) => (
+                                <li key={index}>{action}</li>
+                            ))}
+                            </div>
                         </li>
                     )}
                 </ul>

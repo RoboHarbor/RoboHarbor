@@ -2,7 +2,7 @@ import {useEffect, useState} from "react";
 
 const CustomArguments = (props: {bot: any, onChange: (config: any, bot: any) => void}) => {
 
-    const [config, setConfig] = useState<any>(props.bot?.config?.arguments || {});
+    const [config, setConfig] = useState<any>(props.bot?.runner?.config?.arguments || {});
 
     useEffect(() => {
 
@@ -18,37 +18,50 @@ const CustomArguments = (props: {bot: any, onChange: (config: any, bot: any) => 
                 <label>Value</label>
             </div>
         </div>
-        {Object.keys(config).map((key) => {
+        {config?.entries?.map((entry: any, index: number) => {
             return <div className={"row mb-3"}>
                 <div className={"col-5 col-md-5 col-sm-12"}>
-                    <input className={"form-control"} value={key} onChange={(e) => {
+                    <input className={"form-control"} value={entry.key} onChange={(event) => {
                         const newConfig = {
                             ...config,
-                            [e.target.value]: config[key]
+                            entries: config.entries.map((e: any, i: number) => {
+                                if (i === index) {
+                                    return {
+                                        ...e,
+                                        key: event.target.value
+                                    }
+                                }
+                                return e;
+                            })
                         }
-                        delete newConfig[key];
                         setConfig(newConfig);
                         props.onChange(newConfig, props.bot);
                     }}/>
                 </div>
                 <div className={"col-6 col-md-6 col-sm-10"}>
-                    <input className={"form-control"} value={config[key]} onChange={(e) => {
-                        setConfig({
+                    <input className={"form-control"} value={entry.value} onChange={(event) => {
+                        const newConfig = {
                             ...config,
-                            [key]: e.target.value
-                        });
-                        props.onChange({
-                            ...config,
-                            [key]: e.target.value
-                        }, props.bot);
+                            entries: config.entries.map((e: any, i: number) => {
+                                if (i === index) {
+                                    return {
+                                        ...e,
+                                        value: event.target.value
+                                    }
+                                }
+                                return e;
+                            })
+                        }
+                        setConfig(newConfig);
+                        props.onChange(newConfig, props.bot);
                     }}/>
                 </div>
                 <div className={"col-1 col-md-1 col-sm-2"}>
                     <button className={"btn btn-danger"} type={"button"} onClick={() => {
                         const newConfig = {
-                            ...config
+                            ...config,
+                            entries: config.entries.filter((e: any, i: number) => i !== index)
                         }
-                        delete newConfig[key];
                         setConfig(newConfig);
                         props.onChange(newConfig, props.bot);
                     }} ><i className={"fa fa-trash"} /> </button>
@@ -60,7 +73,13 @@ const CustomArguments = (props: {bot: any, onChange: (config: any, bot: any) => 
                 <button className={"btn btn-primary"} type={"button"} onClick={() => {
                     const newConfig = {
                         ...config,
-                        [""]: ""
+                        entries: [
+                            ...(config.entries || []),
+                            {
+                                key: "",
+                                value: ""
+                            }
+                        ]
                     }
                     setConfig(newConfig);
                     props.onChange(newConfig, props.bot);

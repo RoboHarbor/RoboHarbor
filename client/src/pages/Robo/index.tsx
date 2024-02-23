@@ -3,9 +3,11 @@ import { Link } from 'react-router-dom';
 import Select from 'react-select';
 import { withSwal } from 'react-sweetalert2';
 import {LazyLog} from 'react-lazylog';
+import {Layout, Model} from 'flexlayout-react';
+import 'flexlayout-react/style/light.css';
 
 // hooks
-import { usePageTitle } from '../../hooks';
+import {usePageTitle, useRedux} from '../../hooks';
 
 // images
 import user1 from '../../assets/images/users/user-1.jpg';
@@ -18,44 +20,49 @@ import img1 from '../../assets/images/attached-files/img-1.jpg';
 import img2 from '../../assets/images/attached-files/img-2.jpg';
 import img3 from '../../assets/images/attached-files/img-3.jpg';
 import {IRobot} from "../../../../src/models/robot/types";
-import {useEffect, useState} from "react";
-import {deleteRobot, getRobot, runRobot, stopRobot} from "../../helpers/api/robots";
+import React, {useCallback, useEffect, useState} from "react";
+import {deleteRobot, getRobot, runRobot, stopRobot, updateRobotApi} from "../../helpers/api/robots";
 import Loader from "../../components/Loader";
 import LogView from "../../components/log/LogView";
 import CreateRobotModal from "../../components/modals/CreateRobotModal";
 import SourceShortDetails from "../../components/source/SourceShortDetails";
+import factory from "../../components/windows/factory";
+import {changePageTitle} from "../../redux/pageTitle/actions";
+import {useInterval} from "../../useInterval";
+
 
 const RoboDetail = withSwal((props: any) => {
-    const { swal } = props;
-    // set pagetitle
-    usePageTitle({
-        title: 'Robot Details',
-        breadCrumbItems: [
-            {
-                path: 'harbor/robots/',
-                label: 'Robot Details',
-            },
-        ],
-    });
-
     const [robot, setRobot] = useState<IRobot | null>(null);
-    const [showEdit, setShowEdit] = useState<boolean>(false);
-    const [reloading, setReloading] = useState<boolean>(false);
+    const [showAddNewWindow, setShowAddNewWindow] = useState<boolean>(false);
+    const [lastInterval, setLastInterval] = useState<number>(new Date().getTime());
+    const { swal } = props;
+    const {dispatch} = useRedux();
 
-    const reloadRobotShort = () => {
-        setTimeout(() => {
-            reloadRobot();
-        }, 1000);
+    const updateWindowJson = (model: Model) => {
+        if (robot) {
+            updateRobotApi({
+                id: robot.id,
+                windowJson: model.toJson()
+            });
+        }
+        setWindowJson(model.toJson());
     }
 
     const reloadRobot = () => {
-        if (showEdit) return;
 
         const robotId = window.location.pathname.split('/')[3];
 
         getRobot(`${robotId}`)
             .then((data) => {
-                setRobot(data);
+
+                if (!robot || robot?.updatedAt != data.updatedAt) {
+                    setRobot(data);
+                    if (data.windowJson) {
+                        setWindowJson(data.windowJson);
+                    }
+
+                }
+
             })
             .catch((err) => {
                 if (err.errorKey == 404) {
@@ -65,60 +72,74 @@ const RoboDetail = withSwal((props: any) => {
             });
     };
 
-    const run = () => {
-        const robotId = window.location.pathname.split('/')[3];
-
-        runRobot(`${robotId}`)
-        reloadRobotShort();
-    }
-
-    const delReobot = () => {
-
-        swal
-            .fire({
-                title: 'Are you sure?',
-                text: "You won't be able to revert this!",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#28bb4b',
-                cancelButtonColor: '#f34e4e',
-                confirmButtonText: 'Yes, delete it!',
-            })
-            .then(function (result: { value: any }) {
-                if (result.value) {
-                    const robotId = window.location.pathname.split('/')[3];
-
-                    deleteRobot(`${robotId}`)
-                        .then(() => {
-                            swal.fire('Deleted!', 'Your file has been deleted.', 'success');
-                            reloadRobotShort();
-                        })
+    useInterval(() => {
+        reloadRobot();
+    }, 2000);
 
 
+    useEffect(() => {
+        // set pagetitle
+        dispatch(changePageTitle({
+            title: robot ? robot?.name : "",
+            actions: [
+                <div><a href={""} onClick={(e) => {
+                    setShowAddNewWindow(true);
+                    e.preventDefault();
+                    return false;
+                }}><i className={"fa fa-plus"} /></a></div>
+            ],
+            breadCrumbItems: [
+                {
+                    path: 'harbor/robots/',
+                    label: 'Robot Details',
+                },
+            ],
+        }));
+    }, [robot]);
+
+    const [windowJson, setWindowJson] = useState<any>({
+        global: {},
+        borders: [],
+        layout: {
+            type: "row",
+            weight: 100,
+            children: [
+                {
+                    type: "tabset",
+                    weight: 50,
+                    children: [
+                        {
+                            type: "tab",
+                            name: "One",
+                            component: "robotlog",
+                        }
+                    ]
+                },
+                {
+                    type: "tabset",
+                    weight: 50,
+                    children: [
+                        {
+                            type: "tab",
+                            name: "Two",
+                            component: "robotcontrol",
+                        }
+                    ]
                 }
-            })
+            ]
+        }
+    });
+    const model = Model.fromJson(windowJson);
 
-
+    const reloadRobotShort = () => {
+        reloadRobot();
     }
 
-    const stop = () => {
-        const robotId = window.location.pathname.split('/')[3];
 
-        stopRobot(`${robotId}`)
-        reloadRobotShort();
-    }
-
-    const editRobot = () => {
-        setShowEdit(true);
-    }
 
     useEffect(() => {
 
        reloadRobot();
-       const intervalId = setInterval(() => {
-           reloadRobot();
-       }, 2000);
-        return () => clearInterval(intervalId);
 
     }, []);
 
@@ -129,48 +150,22 @@ const RoboDetail = withSwal((props: any) => {
     );
 
     return (
-        <Row>
-            <Col md={8}>
-                <Card>
-                    <Card.Body>
-                        {showEdit && <CreateRobotModal open={showEdit} onClose={() => {
-                            setShowEdit(false);}} robot={robot} />}
+        <div style={{position: "relative", width: "100%", height: "100%"}}>
+            <Layout
+                model={model}
+                onModelChange={(model) => {
+                    updateWindowJson(model);
+                }}
 
-                        <div className="d-flex mb-3">
-                            <div className="flex-grow-1">
-                                <h2 className="media-heading mt-0">{robot?.name}</h2>
-                            </div>
-                        </div>
+                factory={(node: any) => {
+                    return factory(node, {
+                        robot: robot,
+                        swal: swal,
+                        reloadRobotShort: reloadRobotShort,
+                    });
+                }} />
+        </div>
 
-                        <div className="d-flex mb-3">
-                            <div className="flex-grow-1">
-                                <Button disabled={robot.enabled} onClick={() => editRobot()} variant="secondary" className=""><i className={"fa fa-edit"} /></Button>
-                                {!robot.enabled ? <Button onClick={() => run()} variant="primary" className=""><i className={"fa fa-play"} /></Button> : null}
-                                { robot.enabled == true ? <Button onClick={() => stop()} variant="danger" className=""><i className={"fa fa-stop"} /></Button> : null}
-                                {!robot.enabled ? <Button onClick={() => delReobot()} variant="danger" className=""><i className={"fa fa-trash"} /></Button> : null}
-                            </div>
-                        </div>
-
-                        <SourceShortDetails robot={robot} />
-
-                    </Card.Body>
-                </Card>
-            </Col>
-            <Col md={4}>
-                <Card>
-                    <Card.Body>
-                        {!reloading && <LogView robotId={robot?.id} reload={() => {
-                            reloadRobotShort();
-                            setTimeout(() => {
-                                setReloading(false);
-                            }, 1000);
-
-
-                        }} />}
-                    </Card.Body>
-                </Card>
-            </Col>
-        </Row>
     );
 });
 

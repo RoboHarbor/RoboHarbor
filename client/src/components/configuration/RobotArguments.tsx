@@ -3,8 +3,7 @@ import sadRobot from "../../assets/images/robot/sad_robot.png";
 
 const RoboArguments = (props: {bot: any, onChange: (config: any, bot: any) => void}) => {
 
-    const [robotArguments, setRobotArguments] = useState<any>(props.bot?.roboArguments || null);
-    const [config, setConfig] = useState<any>(props.bot?.config?.robotValues || {});
+    const [robotArguments, setRobotArguments] = useState<any>(props.bot?.runner?.roboArguments || null);
 
     useEffect(() => {
 

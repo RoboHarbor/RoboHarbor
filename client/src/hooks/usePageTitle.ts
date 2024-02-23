@@ -8,6 +8,7 @@ import { useRedux } from './index';
 
 export default function usePageTitle(value: {
     title: string;
+    actions?: any[],
     breadCrumbItems: {
         label: string;
         path: string;

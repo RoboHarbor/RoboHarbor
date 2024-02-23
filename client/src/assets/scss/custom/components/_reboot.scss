@@ -52,6 +52,13 @@ button:focus {
     }
   }
 
+.content {
+  flex: 1 1 auto;
+}
+
+.container-fluid {
+  height: 100%;
+}
 
   // dark mode
 body[data-layout-color="dark"] {

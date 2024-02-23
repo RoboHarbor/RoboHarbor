@@ -2830,10 +2830,10 @@ fork-ts-checker-webpack-plugin@9.0.2:
     semver "^7.3.5"
     tapable "^2.2.1"
 
-forked_proc_socket@^1.0.3:
-  version "1.0.3"
-  resolved "https://registry.yarnpkg.com/forked_proc_socket/-/forked_proc_socket-1.0.3.tgz#1de122715b5621751ba9e648a20ea42293f0e2a4"
-  integrity sha512-bFmMBOhjgvQIOZdmjb6gaCJkREvqz/3exYwRw3yqn0/tv9UFCJiEGDyZYbsySuUYM5SVj1IyVd6xZW0VjFRLrw==
+forked_proc_socket@^1.0.6:
+  version "1.0.6"
+  resolved "https://registry.yarnpkg.com/forked_proc_socket/-/forked_proc_socket-1.0.6.tgz#6ef8c4825115ecbf9ba531c44d8b2579c9b126db"
+  integrity sha512-O4AJWQaQ8mtATI7eswKitqVnpZvUgRlD8XzfHv0kTG6/1Zs6TXlx3EMj7QPxkjrNgNtc/A44TG76z2nD3NXDSQ==
   dependencies:
     ws "^8.16.0"
 

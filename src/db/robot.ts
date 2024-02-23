@@ -62,4 +62,9 @@ export class Robot extends Model implements IRobot {
     @BelongsTo(() => SwarmModel, 'swarmID')
     swarm: ISwarm;
 
+    @Column({
+        type: "json"
+    } )
+    windowJson: string;
+
 }
