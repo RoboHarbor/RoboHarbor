@@ -1,7 +1,9 @@
 name: Deploy
 
 on:
-# No changes
+  push:
+    branches:
+      - main
 
 jobs:
   deploy:

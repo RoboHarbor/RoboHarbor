@@ -10,6 +10,22 @@ export default class PythonRobotRunner extends ShellRobotRunner {
     }
 
     getPythonDirectory() {
+        const version = this.robot?.runner?.config?.attributes?.pythonVersion || "3.8.12";
+        if (version === "3.8") {
+            return "/root/.pyenv/versions/3.8.12/bin/";
+        }
+        if (version === "3.9") {
+            return "/root/.pyenv/versions/3.9.7/bin/";
+        }
+        if (version === "3.7") {
+            return "/root/.pyenv/versions/3.7.12/bin/";
+        }
+        if (version === "3.10") {
+            return "/root/.pyenv/versions/3.10.0/bin/";
+        }
+        if (version === "3.11") {
+            return "/root/.pyenv/versions/3.11.0/bin/";
+        }
         return "/root/.pyenv/versions/3.8.12/bin/"
     }
 
