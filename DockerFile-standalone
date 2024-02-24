@@ -12,7 +12,8 @@ RUN apt-get update && apt-get install -y \
     wget \
     curl \
     g++ \
-    git
+    git \
+    inetutils-ping
 
 # INstall docker.io
 RUN apt-get install ca-certificates curl software-properties-common -y
@@ -27,7 +28,11 @@ RUN echo \
     && apt-get update \
     && apt-get install docker-ce docker-ce-cli containerd.io -y
 
+RUN apt-get update \
+    && apt-get install -y make libssl-dev zlib1g-dev
 
+RUN curl https://pyenv.run | bash
+# RUN echo 'export PATH="$HOME/.pyenv/bin:$PATH"' >> ~/.bashrc
 
 
 
@@ -62,7 +67,15 @@ RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | b
 
 # add node and npm to path so the commands are available
 ENV NODE_PATH $NVM_DIR/v$NODE_VERSION/lib/node_modules
-ENV PATH /root/.nvm/versions/node/v$NODE_VERSION/bin:$PATH
+ENV PATH /root/.nvm/versions/node/v$NODE_VERSION/bin:/root/.pyenv/bin:$PATH
+
+RUN pyenv install 3.8.12
+RUN pyenv install 3.9.7
+RUN pyenv install 3.10.2
+RUN pyenv install 3.11.0
+RUN pyenv install 3.12.0
+
+ENV PATH /root/.pyenv/versions/3.8.12/bin:/root/.pyenv/versions/3.9.7/bin:/root/.pyenv/versions/3.10.2/bin:/root/.pyenv/versions/3.11.0/bin:/root/.pyenv/versions/3.12.0/bin:$PATH
 
 RUN yarn install
 

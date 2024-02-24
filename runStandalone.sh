@@ -1,0 +1,1 @@
+docker build -t foo . -f DockerFile-standalone && docker run  --env DB_HOST="host.docker.internal" --env DB_USER="admin" --env DB_PASS="password" --env DB="postgresDB" -p 5001:5001 -p 3333:3333 -it foo

@@ -87,7 +87,6 @@ export abstract class RobotRunner implements IRobotRunner {
     abstract isRunning(): boolean ;
 
     async updateRobot(robot: IRobot) {
-        this.logger.log("Updating robot: " + JSON.stringify(robot));
         await this.onBeforeRobotUpdated(robot);
         this.robot = robot;
         await this.sourceService.updateRobot(robot);

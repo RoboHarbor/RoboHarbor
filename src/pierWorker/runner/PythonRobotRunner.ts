@@ -5,10 +5,17 @@ import * as fs from "fs";
 
 export default class PythonRobotRunner extends ShellRobotRunner {
 
+    getFullPythonPath() {
+        return this.getPythonDirectory()+"python3";
+    }
+
+    getPythonDirectory() {
+        return "/root/.pyenv/versions/3.8.12/bin/"
+    }
 
 
     getRobotCommand(): string {
-        return this.buildEnvVariables()+' python3 -u ' +this.robot?.runner?.config?.attributes?.script+" "+this.buildArguments();
+        return this.buildEnvVariables()+' '+this.getFullPythonPath()+' -u ' +this.robot?.runner?.config?.attributes?.script+" "+this.buildArguments();
     }
 
     onBeforeShellStart()  {
@@ -16,14 +23,14 @@ export default class PythonRobotRunner extends ShellRobotRunner {
             try {
 
                 if (this.fileExists("requirements.txt")) {
-                    await this.runShellCommand("pip3 install -r requirements.txt", (data) => {
+                    await this.runShellCommand(this.getPythonDirectory()+"pip3 install -r requirements.txt", (data) => {
                             this.log(LogLevel.INFO, data);
                         }, (data) => {
                             this.log(LogLevel.ERROR, data);
                         },
                         (code) => {
                             if (code !== 0) {
-                                this.log(LogLevel.ERROR, "pip3 install -r requirements.txt failed");
+                                this.log(LogLevel.ERROR, this.getPythonDirectory()+"pip3 install -r requirements.txt failed");
                             }
                         });
                 }

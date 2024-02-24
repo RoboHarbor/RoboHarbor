@@ -30,13 +30,14 @@ export default class ShellRobotRunner extends RobotRunner {
             env = Object.keys(this.robot.runner?.config?.env).map((e) => {
                 const val = this.robot.runner.config.env[e];
                 return e+"="+val;
-            }).join(";");
+            }).join("; ");
+            env += "; ";
         }
         return env;
     }
 
     getRobotCommand(): string {
-        return this.buildEnvVariables()+";"+this.robot?.runner?.config?.attributes?.command+this.buildArguments();
+        return this.buildEnvVariables()+this.robot?.runner?.config?.attributes?.command+this.buildArguments();
     }
 
     runShellCommand(command: string, log: (l: string) => void, error: (e: string) => void, onExit: (code: number) => void) : Promise<{
@@ -151,19 +152,6 @@ export default class ShellRobotRunner extends RobotRunner {
                     (log: string) => {
                         this.log(LogLevel.ERROR, log);
                     }, commandStarted);
-
-
-
-                /*
-                this.myShellScript.stdout.on('data', (data)=>{
-                    this.log(LogLevel.INFO, data.toString());
-                    // do whatever you want here with data
-                });
-                this.myShellScript.stderr.on('data', (data)=>{
-                    errored = true;
-                    this.log(LogLevel.ERROR, data);
-
-                });*/
 
                 resolve({
                     success: true,
@@ -289,6 +277,14 @@ export default class ShellRobotRunner extends RobotRunner {
             try {
 
                 const json = JSON.parse(event.toString());
+                if (json.type === "connected") {
+                    if (json.status === "stopped") {
+                        ws.send(JSON.stringify({
+                            command: "start",
+                            commandString: _this.getRobotCommand()
+                        }));
+                    }
+                }
                 if (json.type === "stdout") {
                     _this.log(LogLevel.INFO, json.data);
                 }
