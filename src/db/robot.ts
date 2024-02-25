@@ -41,7 +41,7 @@ export class Robot extends Model implements IRobot {
     sourceInfo: ISourceInfo;
 
     @Column({})
-    pierId: string;
+    pierId: number;
 
     @Column({
         type: "json"
