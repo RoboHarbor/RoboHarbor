@@ -10,46 +10,12 @@ export interface LogViewProps {
 }
 
 
-
 const LogView = ({ robotId, reload }: LogViewProps) => {
 
     const [logs, setLogs] = useState<any[]>([]);
+    const [followMode, setFollowMode] = useState<boolean>(true);
+    const [scrollData, setScrollData] = useState<string>("");
 
-    /*
-    let ws : any = null;
-
-    useEffect(() => {
-
-        const reconnect = () => {
-            // STart a websocket connection to the port 3333 with the id of the robot
-            ws = new WebSocket(`ws://localhost:3333/${robotId}`);
-            ws.onopen = () => {
-                setTimeout(() => {
-                    const data = new FollowRobotLogMessage(robotId);
-                    ws.send(toJSON(data));
-                }, 300);
-            }
-
-            ws.onmessage = (event: any) => {
-                setLogs((logs) => [...logs, fromJSON(event.data)]);
-            }
-
-            ws.onclose = () => {
-                reconnect();
-            }
-
-        }
-        if (typeof robotId !== "undefined" && ws === null) {
-            reconnect();
-        }
-
-        return () => {
-            if (ws) {
-                ws.close();
-            }
-        }
-    }, [robotId]);
-*/
     if (!robotId ) return (<div></div>);
 
     const dateFormat = (date: Date) => {
@@ -63,9 +29,11 @@ const LogView = ({ robotId, reload }: LogViewProps) => {
         <div>
             <ScrollFollow
                 startFollowing={true}
-                render={({ follow, onScroll }) => (
-                    <LazyLog
+                render={({ follow, onScroll, stopFollowing, startFollowing }) => {
 
+                    return (
+
+                    <LazyLog
                         websocket={true}
                         url={`ws://localhost:3333/${robotId}`}
                         websocketOptions={{
@@ -86,9 +54,11 @@ const LogView = ({ robotId, reload }: LogViewProps) => {
                             }
                         }}
                         stream={true}
+                        extraLines={0}
                         lineClassName={"log-line"}
                         height={500}
                         enableSearch={true}
+
                         selectableLines={true}
                         formatPart={(text: string | any) => {
                             if (text.startsWith("INFO")) {
@@ -105,11 +75,20 @@ const LogView = ({ robotId, reload }: LogViewProps) => {
                             }
                             return <span style={{color: "white"}}>{text}</span>;
                         }}
-                        follow={follow}
-                        //@ts-ignore
-                        onScroll={onScroll}
+                        text={scrollData}
+                        follow={followMode}
+                        // @ts-ignore
+                        onScroll={(args: any) =>{
+                            if (args.scrollTop < args.scrollHeight - args.clientHeight) {
+                                stopFollowing();
+                                setFollowMode(false);
+                            } else {
+                                startFollowing();
+                                setFollowMode(true);
+                            }
+                        }}
                     >
-                    </LazyLog>)
+                    </LazyLog>)}
                 } />
         </div>
     );

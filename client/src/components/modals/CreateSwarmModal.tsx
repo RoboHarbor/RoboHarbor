@@ -15,7 +15,6 @@ import {
 } from 'react-bootstrap';
 import { Wizard, Steps, Step } from 'react-albus';
 import _ from 'lodash';
-import {FormInput} from "../form";
 import {useForm} from "react-hook-form";
 import classNames from "classnames";
 import toast, { Toaster } from 'react-hot-toast';
