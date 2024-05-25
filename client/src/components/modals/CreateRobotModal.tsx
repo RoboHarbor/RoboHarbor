@@ -3,28 +3,23 @@ import {Link} from 'react-router-dom';
 import {
     Row,
     Col,
-    Card,
     Form,
     Button,
-    ProgressBar,
     Tab,
     Nav,
-    useAccordionButton,
     Modal,
-    Container, Accordion, AccordionContext
+    Container,
 } from 'react-bootstrap';
 import { Wizard, Steps, Step } from 'react-albus';
 import _ from 'lodash';
 import toast, { Toaster } from 'react-hot-toast';
-import { getRunnerPackages} from "../../helpers/api/harbor";
-import {IRunnerPackage} from "../../../../src/models/harbor/types";
 import ConfigurationContainer from "../configuration/ConfigurationContainer";
 import {createRobotApi, runSourceValidationApi, updateRobotApi} from "../../helpers/api/robots";
 import {IRobot} from "../../../../src/models/robot/types";
-import {CredentialComponent} from "../authentication/CredentialComponent";
 import SourceConfiguration from "../configuration/SourceConfiguration";
 import RobotRunnerTypeConfiguration from "../configuration/RobotRunnerTypeConfiguration";
 import RobotBasicConfig from "../configuration/RobotBasicConfig";
+import {IImage} from "../../models/pier/types";
 
 const robotCreationwait = () => toast.loading('Creating the Robot...', {
     icon: <i className={"mdi mdi-loading mdi-spin"}></i>
@@ -35,7 +30,7 @@ const CreateRobotModal = (props: {open: boolean, robot?: IRobot, onClose: () => 
 
     let [key, setKey] = useState<string|null>('bottype');
     let [bot, setBot] = useState<any>(props.robot ? props.robot : {});
-    const [possibleRunners, setPossibleRunners] = useState<IRunnerPackage[]>([]); // ["docker", "shell"
+    const [possibleImages, setPossibleImages] = useState<IImage[]>([]); // ["docker", "shell"
 
     const isEdit = props.robot ? true : false;
 
@@ -190,7 +185,7 @@ const CreateRobotModal = (props: {open: boolean, robot?: IRobot, onClose: () => 
                                                     <SourceConfiguration
                                                         bot={bot}
                                                         setBotValue={setBotValue}
-                                                        setPossibleRunners={setPossibleRunners}
+                                                        setPossibleRunners={setPossibleImages}
                                                         next={() => {
                                                             setKey("runner");
                                                         }}
@@ -215,7 +210,7 @@ const CreateRobotModal = (props: {open: boolean, robot?: IRobot, onClose: () => 
                                                         next={() => {
                                                             setKey('settings');
                                                         }}
-                                                        possibleRunners={possibleRunners}
+                                                        possibleImages={possibleImages}
                                                     />
                                                 )}
                                             />

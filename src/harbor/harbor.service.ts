@@ -1,11 +1,7 @@
 import { Logger, Injectable } from '@nestjs/common';
-import {MessageBuilder, SocketService} from "./socket.service";
-import {NoPierAvailableError} from "../errors/NoPierAvailableError";
 import {InjectModel} from "@nestjs/sequelize";
-import {Pier} from "../db/pier.model";
-import {RunnerPackage} from "../db/runnerpackage.model";
-import {Robot} from "../db/robot";
-import {IRobot} from "../models/robot/types";
+import {Images} from "../db/images.model";
+import {SocketService} from "./socket.service";
 
 
 
@@ -15,14 +11,13 @@ export class HarborService {
     private readonly logger = new Logger(HarborService.name);
 
     constructor(readonly socketService: SocketService,
-                @InjectModel(RunnerPackage)
-                private runnerPackageModel: typeof RunnerPackage,) {
+                @InjectModel(Images)
+                private imageModel: typeof Images,) {
     }
 
     async getAvailableRunnerPackages() {
-        return this.runnerPackageModel.findAll({
-            attributes: ["id", "name", "title", "description", "version", "createdAt", "logo", "updatedAt",
-                "attributes", "parameters", "environmentVariables"]
+        return this.imageModel.findAll({
+            attributes: ["id", "name", "description", "imageContainerName", "version", "attributes"],
         });
     }
 

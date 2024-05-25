@@ -1,20 +1,20 @@
 import {Button, Col, Form, Row} from "react-bootstrap";
-import {IRunnerPackage} from "../../../../src/models/harbor/types";
 import {useEffect, useState} from "react";
 import {getRunnerPackages} from "../../helpers/api/harbor";
 import _ from "lodash";
+import {IImage} from "../../models/pier/types";
 
 export interface RobotRunnerTypeConfigurationProps{
     bot?: any;
     setBotValue: (key: string, value: any) => void;
     previous: () => void;
     next: () => void;
-    possibleRunners?: IRunnerPackage[];
+    possibleImages?: IImage[];
 
 }
 
-const RobotRunnerTypeConfiguration = ({bot, setBotValue, next, previous, possibleRunners}: RobotRunnerTypeConfigurationProps) => {
-    const [runnerPackages, setRunnerPackages] = useState<IRunnerPackage[]>([]);
+const RobotRunnerTypeConfiguration = ({bot, setBotValue, next, previous, possibleImages}: RobotRunnerTypeConfigurationProps) => {
+    const [runnerPackages, setRunnerPackages] = useState<IImage[]>([]);
 
     useEffect(() => {
         getRunnerPackages()
@@ -24,12 +24,12 @@ const RobotRunnerTypeConfiguration = ({bot, setBotValue, next, previous, possibl
     }, [])
 
 
-    const sortByPossibleRunners = (a: IRunnerPackage, b: IRunnerPackage) => {
-        if (possibleRunners && possibleRunners.length > 0) {
-            if (possibleRunners.find((r) => r.name === a.name)) {
+    const sortByPossibleRunners = (a: IImage, b: IImage) => {
+        if (possibleImages && possibleImages.length > 0) {
+            if (possibleImages.find((r) => r.name === a.name)) {
                 return -1;
             }
-            if (possibleRunners.find((r) => r.name === b.name)) {
+            if (possibleImages.find((r) => r.name === b.name)) {
                 return 1;
             }
         }
@@ -52,7 +52,7 @@ const RobotRunnerTypeConfiguration = ({bot, setBotValue, next, previous, possibl
                 <input className={"searchbar bg-light"} style={{maxWidth: "250px"}} type={"text"} name={"searchRunner"} placeholder={"Search runner..."} />
             </Col>
             <Col sm={12} className={"d-flex flex-row overflow-auto"}>
-                {runnerPackages.sort(sortByPossibleRunners).map((runnerPackage: IRunnerPackage) => {
+                {runnerPackages.sort(sortByPossibleRunners).map((runnerPackage: IImage) => {
                     return <div onClick={() => setBotValue("runner.type", runnerPackage.name)}
                                 className={"card-width-220 justify-content-center text-center  card m-2 nomargin card-body card-hoverable "+(isValue("runner.type", runnerPackage.name) ? "card-hoverable-selected" : "")}>
                         <div className={"align-content-center mb-3"}><img style={{maxWidth: "50px", maxHeight: "50px"}} src={runnerPackage.logo} /></div>

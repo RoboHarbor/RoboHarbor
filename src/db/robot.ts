@@ -46,7 +46,8 @@ export class Robot extends Model implements IRobot {
     @Column({
         type: "json"
     } )
-    runner: any;
+    image: any;
+
 
     @Column({
         type: "json"

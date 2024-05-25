@@ -1,21 +1,16 @@
+import {IImage} from "../../../client/src/models/pier/types";
 
 export interface IAttribute {
-    values: {value: string, label: string }[];
+    values?: {value: string, label: string }[];
     name: string,
     type: string,
+    label?: string,
 }
 
-export interface IRunnerPackage{
-    title: any;
-    description: string;
-    name: string,
-    id: number,
-    logo: string,
-    shellCommandForPackageInstallation: string,
-    parameters?: boolean,
-    environmentVariables?: boolean,
-    attributes?: IAttribute[]
+export interface IImagesModel extends IImage {
+
 }
+
 
 export interface DetectedRunner {
     name: string,
@@ -23,6 +18,9 @@ export interface DetectedRunner {
 
 
 export interface IRoboShellValidationResult {
+    error_code?: number;
     source: boolean,
+    isError?: boolean,
+    error?: string,
     possibleRunners?: DetectedRunner[]
 }

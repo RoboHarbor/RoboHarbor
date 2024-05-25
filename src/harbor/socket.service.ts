@@ -1,7 +1,5 @@
 import {forwardRef, Inject, Injectable, Logger} from '@nestjs/common';
 import { Socket } from 'socket.io';
-import {MessageBody} from "@nestjs/websockets";
-import {PiersService} from "../piers/piers.service";
 import {NoPierAvailableError} from "../errors/NoPierAvailableError";
 import {SendWebSocketMessageError} from "../errors/SendWebSocketMessageError";
 import {RobotsService} from "../robots/robots.service";
@@ -41,7 +39,6 @@ export enum MessageTypes {
     REGISTERED_FAILED = "registeredFailed",
     ROBOT_CREATED = "robotCreated",
     RELOAD_ROBOTS = "reloadRobots",
-    GET_PIER_DETAILS = "getPierDetails",
     RUN_ROBOT = "runRobot",
     ERROR_ROBOT_MESSAGE = "errorRobotMessage",
     ROBOT_STOP = "robotStop",
@@ -144,12 +141,6 @@ export class MessageBuilder {
         };
     }
 
-    static getPierDetails() {
-        return {
-            type: MessageTypes.GET_PIER_DETAILS
-        };
-    }
-
     static runRobotMessage(robot: Robot) {
         return {
             type: MessageTypes.RUN_ROBOT,
@@ -249,10 +240,11 @@ export class SocketService {
     private static readonly connectedClients: Map<string, Socket> = new Map();
     private static messageResponseRegistry: Map<string, IMessageResponseInfo> = new Map();
 
-    constructor(private readonly pierService: PiersService,
+    constructor(
                 private readonly logWsService: LogWSService,
                 @Inject(forwardRef(() => RobotsService))
                 private robotsService: RobotsService,
+
                 @InjectModel(Robot)
                 private robotModel: typeof Robot,
                 @InjectModel(Pier)
@@ -325,7 +317,7 @@ export class SocketService {
                 SocketService.connectedClients.set(message.socketId, socket);
                 setTimeout(async () => {
                     try {
-                        await this.pierService.registerPier(message.socketId, true);
+
                         this.sendMessage(socket, MessageBuilder.registrationSuccess(message.socketId));
                     }
                     catch(e) {
@@ -340,24 +332,6 @@ export class SocketService {
                 this.logWsService.onLogMessageReceived(message.targetRobot, message.level, message.logs, message.date);
                 this.robotsService.logRobot(robotId, message.level, message.logs);
 
-            }
-            else if (message.type === MessageTypes.GET_PIER_DETAILS) {
-                const pierId = this.getSocketId(socket);
-                this.pierService.getPier(pierId).then(async (res) => {
-                    const r = JSON.parse(JSON.stringify(res));
-                    r.robots = r.robots.map((r) => {
-                        return cleanRobotData(r);
-                    });
-                    r.robots = await Promise.all(r.robots.map(async (r) => {
-                        return await this.robotsService.expandRobotDetails(r);
-                    }));
-                    this.sendMessage(socket, {
-                        responseId: message.responseId,
-                        type: MessageTypes.PIER_DETAILS,
-                        piers: r,
-                        isResponse: true,
-                    });
-                });
             }
             else if (message.type === MessageTypes.UPDATE_ROBOT) {
                 const robotId = message.robotId;
@@ -375,7 +349,7 @@ export class SocketService {
             else if (message.type === MessageTypes.PING) {
                 // Nothing to do
                 try {
-                    this.pierService.registerPier(message.socketId);
+
                 }
                 catch(e){}
             }
@@ -414,42 +388,8 @@ export class SocketService {
 
     sendMessageWithResponse(pierId: string, message: IMessage) : Promise<IMessage> {
         return new Promise<IMessage>(async (resolve, reject) => {
-            if (SocketService.connectedClients.get(pierId)) {
-                try {
-                    message.responseId = this.randomResponseId();
-                    message.waitForResponse = true;
-                    const socket = SocketService.connectedClients.get(pierId);
-                    SocketService.messageResponseRegistry.set(message.responseId, {
-                        resolve: resolve,
-                        reject: reject,
-                        sentMessage: message,
-                        pierId: pierId,
-                        timeout: setTimeout(() => {
-                            reject(new SendWebSocketMessageError({
-                                pierId: pierId,
-                                pierMessage: message,
-                                error: "Timeout"
-                            }));
-                        }, message.timeout || 120000),
-                        date: new Date()
-                    });
-                    return socket.send(MessageBuilder.toMessage(message));
-                }
-                catch(e) {
-                    reject(new SendWebSocketMessageError({
-                        pierId: pierId,
-                        pierMessage: message,
-                        error: e.toString()
-                    }));
-                }
-            }
-            else {
-                reject(new NoPierAvailableError({
-                    message: message
-                }));
-            }
-        });
 
+        });
     }
 
     private sendMessage(socket: Socket, msg: IMessage) {
@@ -506,4 +446,18 @@ export class SocketService {
         });
     }
 
+    waitForRobotRegistration(identifier: string, timeout: number = 60) {
+        return new Promise((resolve, reject) => {
+            const timeoutCtrl = setTimeout(() => {
+                reject(new Error("Timeout waiting for robot registration"));
+            }, timeout*1000);
+            const intervalCtrl = setInterval(() => {
+                if (SocketService.connectedClients.get(identifier)) {
+                    clearInterval(intervalCtrl);
+                    clearTimeout(timeoutCtrl);
+                    resolve(true);
+                }
+            }, 1000);
+        });
+    }
 }

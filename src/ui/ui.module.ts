@@ -3,11 +3,11 @@ import { UiService } from './ui.service';
 import { UiController } from './ui.controller';
 import {SequelizeModule} from "@nestjs/sequelize";
 import {User} from "../db/user.model";
-import {RunnerPackage} from "../db/runnerpackage.model";
+import {Images} from "../db/images.model";
 
 @Module({
   providers: [UiService],
-  imports: [SequelizeModule.forFeature([User, RunnerPackage])],
+  imports: [SequelizeModule.forFeature([User, Images])],
   controllers: [UiController]
 })
 export class UiModule {

@@ -23,12 +23,12 @@
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
+    "@kubernetes/client-node": "^0.21.0",
     "@libsql/client": "^0.4.0-pre.7",
     "@nestjs/common": "^10.0.0",
     "@nestjs/config": "^3.1.1",
     "@nestjs/core": "^10.0.0",
     "@nestjs/devtools-integration": "^0.1.5",
-    "forked_proc_socket": "^1.0.6",
     "@nestjs/platform-express": "^10.0.0",
     "@nestjs/platform-socket.io": "^10.3.0",
     "@nestjs/platform-ws": "^10.3.0",
@@ -36,6 +36,7 @@
     "@nestjs/serve-static": "^4.0.0",
     "@nestjs/swagger": "^7.1.17",
     "@nestjs/websockets": "^10.3.0",
+    "forked_proc_socket": "^1.0.6",
     "pg": "^8.11.3",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.8.1",

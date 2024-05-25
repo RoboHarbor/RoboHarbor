@@ -14,17 +14,18 @@ import {AppGateway} from "./app.gateway";
 import {Pier} from "./db/pier.model";
 import { HarborModule } from './harbor/harbor.module';
 import * as process from "process";
-import {RunnerPackage} from "./db/runnerpackage.model";
 import {Robot} from "./db/robot";
 import {AppLogws} from "./app.logws";
 import {LogModule} from "./log/log.module";
 import {Log} from "./db/log.model";
 import {Credentials} from "./db/credentials.model";
 import {SwarmModel} from "./db/swarm.model";
+import {Images} from "./db/images.model";
+import {SocketService} from "./harbor/socket.service";
 
 @Module({
   controllers: [AppController],
-  providers: [AppGateway, AppLogws, AppService],
+  providers: [AppGateway, AppLogws, AppService ],
   exports: [AppService],
   imports: [
     ConfigModule.forRoot({isGlobal: true}),
@@ -35,7 +36,7 @@ import {SwarmModel} from "./db/swarm.model";
       username: process.env.DB_USER,
       password: process.env.DB_PASS,
       database: process.env.DB,
-      models: [User, Pier, RunnerPackage, Robot, SwarmModel, Log, Credentials],
+      models: [User, Pier, Robot, SwarmModel, Log, Credentials, Images],
       autoLoadModels: true,
       synchronize: true,
       sync: {

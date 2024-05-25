@@ -20,6 +20,11 @@ export interface ICredentialsInfo{
 }
 
 export interface IRobot {
+    image: {
+        name: string,
+        version?: string,
+        config?: any,
+    };
     windowJson?: any;
     updatedAt?: Date;
 
@@ -35,10 +40,6 @@ export interface IRobot {
     };
     sourceInfo?: ISourceInfo,
 
-    runner: {
-        type: string,
-        config?: any,
-    };
     config: any;
     type: BotType;
     name: string;

@@ -10,7 +10,7 @@ export const cleanRobotData = (robot: IRobot) : IRobot => {
             sourceVersion: robot.sourceInfo.sourceVersion,
             localVersion: robot.sourceInfo.localVersion,
             } : null,
-        runner: robot.runner,
+        image: robot.image,
         config: robot.config,
         type: robot.type,
         enabled: robot.enabled,

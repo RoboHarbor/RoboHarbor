@@ -8,9 +8,5 @@ export class PiersController {
 
     }
 
-    @Get()
-    async getAllPiers() {
-        return await this.piersService.getAll();
-    }
 
 }
