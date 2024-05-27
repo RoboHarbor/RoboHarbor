@@ -5,7 +5,6 @@ import {IRobot} from "../models/robot/types";
 import {Robot} from "../db/robot";
 import {InjectConnection, InjectModel} from "@nestjs/sequelize";
 import {Sequelize, Transaction} from "sequelize";
-import {Pier} from "../db/pier.model";
 import {RoboHarborError} from "../errors/RoboHarborError";
 import {uniqueNamesGenerator, adjectives, colors, animals, Config} from 'unique-names-generator';
 import {Log} from "../db/log.model";
@@ -15,7 +14,6 @@ import {PiersService} from "../piers/piers.service";
 const config: Config = {
     dictionaries: [adjectives, colors, animals],
     separator: '-',
-    seed: 120498,
 };
 
 
@@ -37,9 +35,7 @@ export class RobotsService {
                 @InjectModel(Images)
                 private imageModel: typeof Images,
                 @InjectConnection()
-                private sequelize: Sequelize,
-                @InjectModel(Pier)
-                private pierModel: typeof Pier,) {
+                private sequelize: Sequelize,) {
     }
 
     attachFullInformationToRobot(bot: IRobot) {
@@ -48,7 +44,12 @@ export class RobotsService {
                 bot.id = Math.floor(Math.random() * 1000000);
             }
             if (!bot.identifier) {
-                bot.identifier = uniqueNamesGenerator(config);
+                if (process.env.DEV_KUBERNETES !== "development") {
+                    bot.identifier = uniqueNamesGenerator(config);
+                }
+                else {
+                    bot.identifier = "your-test-robot-identifier";
+                }
             }
             if (bot.source?.credentials) {
                 bot.source.credentials = await this.credentialsModel.findOne({
@@ -155,12 +156,6 @@ export class RobotsService {
 
                 const createdRobot = await robot.save({transaction: t});
 
-                const pier = await this.pierModel.findOne({where: {identifier: pierId}, transaction: t});
-                // ADd robot to pier
-                await pier.$add('robot', createdRobot, {transaction: t});
-
-                await pier.save({transaction: t});
-
                 return Promise.resolve(createdRobot);
             })
                 .then((res) => {
@@ -227,7 +222,7 @@ export class RobotsService {
         if (!robot) {
             throw new RoboHarborError(404, "Robot not found");
         }
-        return this.socketService.sendMessageToRobotWithResponse(robot, MessageBuilder.reloadSourceMessage(robot))
+        return this.socketService.sendMessageToRobotWithResponse(robot.identifier, MessageBuilder.reloadSourceMessage(robot))
             .then((res: any) => {
                 robot.sourceInfo = res.sourceInfo;
                 return robot.save();
@@ -241,7 +236,7 @@ export class RobotsService {
         }
         robot.enabled = true;
         await robot.save();
-        return this.socketService.sendMessageToRobotWithResponse(robot, MessageBuilder.runRobotMessage(robot))
+        return this.socketService.sendMessageToRobotWithResponse(robot.identifier, MessageBuilder.runRobotMessage(robot))
             .then((res) => {
                 return res;
             });
@@ -254,7 +249,7 @@ export class RobotsService {
         }
         robot.enabled = false;
         await robot.save();
-        return this.socketService.sendMessageToRobotWithResponse(robot, MessageBuilder.stopRobotMessage(robot))
+        return this.socketService.sendMessageToRobotWithResponse(robot.identifier, MessageBuilder.stopRobotMessage(robot))
             .then((res) => {
                 return res;
             });
@@ -284,14 +279,10 @@ export class RobotsService {
             robot.type = bot.type;
         }
         await robot.save();
-        const pierOd = robot.pierId;
-        const pier = await this.pierModel.findOne({where: {id: pierOd}});
-        if (pier) {
-            this.socketService.sendMessageWithoutResponse(pier.identifier, MessageBuilder.reloadRobots())
-                .catch((e) => {
-                    this.logger.error("Error reloading robots: ", e);
-                });
-        }
+        this.socketService.sendMessageWithoutResponse(robot.identifier, MessageBuilder.reloadRobots())
+            .catch((e) => {
+                this.logger.error("Error reloading robots: ", e);
+            });
 
         return robot;
     }
@@ -325,7 +316,7 @@ export class RobotsService {
         if (!robot) {
             throw new RoboHarborError(404, "Robot not found");
         }
-        return this.socketService.sendMessageToRobotWithResponse(robot, MessageBuilder.updateSourceMessage(robot))
+        return this.socketService.sendMessageToRobotWithResponse(robot.identifier, MessageBuilder.updateSourceMessage(robot))
             .then((res) => {
                 return res;
             });
@@ -336,7 +327,7 @@ export class RobotsService {
         if (!robot) {
             throw new RoboHarborError(404, "Robot not found");
         }
-        return this.socketService.sendMessageToRobotWithResponse(robot, MessageBuilder.deleteRobotMessage(robot))
+        return this.socketService.sendMessageToRobotWithResponse(robot.identifier, MessageBuilder.deleteRobotMessage(robot))
             .then((res) => {
                 Robot.destroy({
                     where: {

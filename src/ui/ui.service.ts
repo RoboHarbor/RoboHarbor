@@ -1,9 +1,8 @@
-import {Inject, Injectable, Logger} from '@nestjs/common';
+import {Injectable, Logger} from '@nestjs/common';
 import {UserData} from "../models/auth/types";
 import {InjectModel} from "@nestjs/sequelize";
 import {User} from "../db/user.model";
 import {Images} from "../db/images.model";
-import {IImagesModel} from "../models/harbor/types";
 const {createHash} = require('crypto');
 
 
@@ -139,7 +138,7 @@ export class UiService {
                 visible: false,
                 description: "Python script",
                 title: "Validate Robot",
-                version: "1.0.1",
+                version: "latest",
                 attributes: [
 
                 ],

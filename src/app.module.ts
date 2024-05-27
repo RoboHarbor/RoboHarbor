@@ -11,7 +11,6 @@ import { PiersModule } from './piers/piers.module';
 import { RobotsModule } from './robots/robots.module';
 import {DevtoolsModule} from "@nestjs/devtools-integration";
 import {AppGateway} from "./app.gateway";
-import {Pier} from "./db/pier.model";
 import { HarborModule } from './harbor/harbor.module';
 import * as process from "process";
 import {Robot} from "./db/robot";
@@ -36,7 +35,7 @@ import {SocketService} from "./harbor/socket.service";
       username: process.env.DB_USER,
       password: process.env.DB_PASS,
       database: process.env.DB,
-      models: [User, Pier, Robot, SwarmModel, Log, Credentials, Images],
+      models: [User,  Robot, SwarmModel, Log, Credentials, Images],
       autoLoadModels: true,
       synchronize: true,
       sync: {

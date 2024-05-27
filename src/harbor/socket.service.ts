@@ -4,7 +4,6 @@ import {NoPierAvailableError} from "../errors/NoPierAvailableError";
 import {SendWebSocketMessageError} from "../errors/SendWebSocketMessageError";
 import {RobotsService} from "../robots/robots.service";
 import {InjectModel} from "@nestjs/sequelize";
-import {Pier} from "../db/pier.model";
 import {Robot} from "../db/robot";
 import {IRobot} from "../models/robot/types";
 import {LogLevel} from "../models/other/types";
@@ -27,15 +26,16 @@ export interface IMessage {
 
 export enum MessageTypes {
     INIT = "initMessage",
-    VALIDATE_ROBOT = "validateRobot",
+    VALIDATE_ROBOT = "validateRobotDetails",
     VALIDATE_ROBOT_RESPONSE = "validateRobotResponse",
     NO_REGISTRATION = "noRegistrationMessage",
     PROTOCOL_MISMATCH = "protocolMismatch",
     ROBOT_MANUAL_RUN = "robotManualRun",
-    REGISTER = "registerPier",
+    REGISTER_ROBOT = "REGISTER_ROBOT",
     PING = "ping",
     REGISTERED = "registered",
     PIER_DETAILS = "pierDetails",
+    GET_ROBOT_DETAILS = "getRobotDetails",
     REGISTERED_FAILED = "registeredFailed",
     ROBOT_CREATED = "robotCreated",
     RELOAD_ROBOTS = "reloadRobots",
@@ -90,13 +90,6 @@ export class MessageBuilder {
         };
     }
 
-    static registerMessage(pierName: string) {
-        return {
-            type: MessageTypes.REGISTER,
-            socketId: pierName
-        };
-    }
-
     static heartbeatMessage() {
         return {
             type: MessageTypes.PING
@@ -113,11 +106,10 @@ export class MessageBuilder {
         };
     }
 
-    static validateRobotMessage(pierId: any, bot: any) {
+    static validateRobotMessage(bot: any) {
         return {
             type: MessageTypes.VALIDATE_ROBOT,
-            bot: bot,
-            pierId: pierId
+            robot: cleanRobotData(bot)
         };
     }
 
@@ -222,6 +214,13 @@ export class MessageBuilder {
             targetRobot: robot.id
         };
     }
+
+    static getRobotDetails(robot: Robot) {
+        return {
+            type: MessageTypes.GET_ROBOT_DETAILS,
+            robot: robot
+        };
+    }
 }
 
 interface IMessageResponseInfo {
@@ -238,6 +237,7 @@ interface IMessageResponseInfo {
 export class SocketService {
     private readonly logger = new Logger(SocketService.name);
     private static readonly connectedClients: Map<string, Socket> = new Map();
+    private static readonly connectedRobots: Map<string, Socket[]> = new Map();
     private static messageResponseRegistry: Map<string, IMessageResponseInfo> = new Map();
 
     constructor(
@@ -246,9 +246,7 @@ export class SocketService {
                 private robotsService: RobotsService,
 
                 @InjectModel(Robot)
-                private robotModel: typeof Robot,
-                @InjectModel(Pier)
-                private pierModel: typeof Pier,)  {
+                private robotModel: typeof Robot,)  {
     }
 
     getSocketId(socket: Socket) {
@@ -261,14 +259,41 @@ export class SocketService {
         return foundValue;
     }
 
+    getSocketRobotId(socket: Socket) {
+        let foundValue = null;
+        SocketService.connectedRobots.forEach((value: Socket[], key: any) => {
+            for (const s of value) {
+                if (s === socket) {
+                    foundValue = key;
+                }
+            }
+        });
+        return foundValue;
+    }
+
+    handleDisconnect(socket: Socket, server: any): void {
+        SocketService.connectedClients.delete(this.getSocketId(socket));
+        this.logger.debug("Client disconnected",  this.getSocketRobotId(socket));
+        const robots = SocketService.connectedRobots.get(this.getSocketRobotId(socket));
+        if (robots) {
+            this.logger.debug("Robot disconnected", robots);
+            const newRobots = robots.filter((value) => {
+                return value !== socket;
+            });
+            if (newRobots.length === 0) {
+                this.logger.debug("No more robots connected");
+                SocketService.connectedRobots.delete(this.getSocketRobotId(socket));
+            }
+            else {
+                this.logger.debug("Robots disconnected, but some available", newRobots)
+                SocketService.connectedRobots.set(this.getSocketRobotId(socket), newRobots);
+            }
+        }
+    }
+    
     handleConnection(socket: Socket, server: any): void {
 
-        socket.on('disconnect', () => {
-            SocketService.connectedClients.delete(this.getSocketId(socket));
-        });
-
         this.sendMessage(socket, MessageBuilder.initMessage());
-
 
         setTimeout(() => {
             let found = false;
@@ -289,10 +314,15 @@ export class SocketService {
             }
         }, WAIT_FOR_REGISTRATION);
 
+        socket.on('error', (error: any) => {
+            this.logger.error("Socket error", error);
+        });
+
         // Handle other events and messages from the client
         socket.on('message', async (message: any) => {
             try {
                 const msg = MessageBuilder.fromMessage(message.toString());
+                this.logger.debug(msg);
                 if (typeof msg.socketId === "undefined" || msg.socketId === null) {
                     msg.socketId = this.getSocketId(socket);
                 }
@@ -313,8 +343,13 @@ export class SocketService {
 
     async onMessageReceived(socket: Socket, message: IMessage) {
         try {
-            if (message.type === MessageTypes.REGISTER) {
+            if (message.type === MessageTypes.REGISTER_ROBOT) {
                 SocketService.connectedClients.set(message.socketId, socket);
+                if (SocketService.connectedRobots.get(message.robotId) === undefined) {
+                    SocketService.connectedRobots.set(message.robotId, []);
+                }
+                SocketService.connectedRobots.get(message.robotId).push(socket);
+
                 setTimeout(async () => {
                     try {
 
@@ -326,6 +361,16 @@ export class SocketService {
 
                 }, 100);
 
+            }
+            else if (message.type === MessageTypes.GET_ROBOT_DETAILS) {
+                const robot = await this.robotModel.findByPk(message.roboId);
+                if (robot) {
+                    this.answer(socket, message, MessageBuilder.getRobotDetails(robot));
+                }
+                else {
+                    this.logger.error("Robot not found", message);
+                    this.answer(socket, message, MessageBuilder.errorRobotMessage(message.socketId, message.pierId, "Robot not found"));
+                }
             }
             else if (message.type === MessageTypes.ROBOT_LOG) {
                 const robotId = message.targetRobot;
@@ -352,6 +397,9 @@ export class SocketService {
 
                 }
                 catch(e){}
+            }
+            else if (message.type === MessageTypes.VALIDATE_ROBOT) {
+
             }
             else if (message.type === MessageTypes.ROBOT_STOPPED) {
                 const robot =  await this.robotModel.findByPk(message.targetRobot);
@@ -386,9 +434,39 @@ export class SocketService {
         return Math.floor(Math.random() * 1000000000).toString();
     }
 
-    sendMessageWithResponse(pierId: string, message: IMessage) : Promise<IMessage> {
+    sendMessageWithResponse(id: string, message: IMessage, timeout: number=10) : Promise<IMessage> {
         return new Promise<IMessage>(async (resolve, reject) => {
-
+            if (SocketService.connectedRobots.get(id)) {
+                for (const socket of SocketService.connectedRobots.get(id)) {
+                    try {
+                        message.responseId = this.randomResponseId();
+                        message.waitForResponse = true;
+                        const responseInfo: IMessageResponseInfo = {
+                            resolve: resolve,
+                            reject: reject,
+                            sentMessage: message,
+                            pierId: id,
+                            date: new Date(),
+                            timeout: setTimeout(() => {
+                                reject(new Error("Timeout waiting for response"));
+                            }, process.env.NODE_ENV === 'development' ? 600000 : timeout*1000)
+                        };
+                        SocketService.messageResponseRegistry.set(message.responseId, responseInfo);
+                        socket.send(MessageBuilder.toMessage(message));
+                    }
+                    catch(e) {
+                        reject(new SendWebSocketMessageError({
+                            pierMessage: message,
+                            error: e.toString()
+                        }));
+                    }
+                }
+            }
+            else {
+                reject(new NoPierAvailableError({
+                    message: message
+                }));
+            }
         });
     }
 
@@ -396,13 +474,13 @@ export class SocketService {
         return socket.send(MessageBuilder.toMessage(msg));
     }
 
-    sendMessageWithoutResponse(pierId: any, message: IMessage) {
+    sendMessageWithoutResponse(clientId: any, message: IMessage) {
         return new Promise<IMessage>(async (resolve, reject) => {
-            if (SocketService.connectedClients.get(pierId)) {
+            if (SocketService.connectedClients.get(clientId)) {
                 try {
                     message.responseId = this.randomResponseId();
                     message.waitForResponse = false;
-                    const socket = SocketService.connectedClients.get(pierId);
+                    const socket = SocketService.connectedClients.get(clientId);
 
                     socket.send(MessageBuilder.toMessage(message));
 
@@ -410,7 +488,6 @@ export class SocketService {
                 }
                 catch(e) {
                     reject(new SendWebSocketMessageError({
-                        pierId: pierId,
                         pierMessage: message,
                         error: e.toString()
                     }));
@@ -424,19 +501,9 @@ export class SocketService {
         });
     }
 
-    sendMessageToRobotWithResponse(robot: Robot | number, runRobotMessage: IMessage) {
+    sendMessageToRobotWithResponse(robot_id: string, runRobotMessage: IMessage, timeout: number = 60) : Promise<IMessage> {
         return new Promise(async (resolve, reject) => {
-            let robotData = null;
-            if (typeof robot === "number") {
-                robotData = this.robotModel.findByPk(robot);
-            }
-            else {
-                robotData = robot;
-            }
-            runRobotMessage.targetRobot = robotData.id;
-            runRobotMessage.robot = cleanRobotData(robotData);
-            const pier = await this.pierModel.findOne({where: {id: robotData.pierId}});
-            return this.sendMessageWithResponse(pier.identifier, runRobotMessage)
+            return this.sendMessageWithResponse(robot_id, runRobotMessage, timeout)
                 .then((res) => {
                     resolve(res);
                 })
@@ -448,14 +515,22 @@ export class SocketService {
 
     waitForRobotRegistration(identifier: string, timeout: number = 60) {
         return new Promise((resolve, reject) => {
+            if (process.env.NODE_ENV === 'development') {
+                timeout = 600000;
+            }
             const timeoutCtrl = setTimeout(() => {
                 reject(new Error("Timeout waiting for robot registration"));
             }, timeout*1000);
             const intervalCtrl = setInterval(() => {
-                if (SocketService.connectedClients.get(identifier)) {
+                if (SocketService.connectedRobots.get(identifier) && SocketService.connectedRobots.get(identifier).length > 0) {
+                    const firstSocket = SocketService.connectedRobots.get(identifier)[0];
+                    this.logger.debug("Robot registered", firstSocket);
                     clearInterval(intervalCtrl);
                     clearTimeout(timeoutCtrl);
-                    resolve(true);
+                    resolve({
+                        id: identifier,
+
+                    });
                 }
             }, 1000);
         });

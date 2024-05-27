@@ -4,12 +4,26 @@ import {Images} from "../db/images.model";
 import * as k8s from '@kubernetes/client-node';
 import {IRoboShellValidationResult} from "../models/harbor/types";
 import {InjectModel} from "@nestjs/sequelize";
-import {SocketService} from "../harbor/socket.service";
+import {MessageBuilder, SocketService} from "../harbor/socket.service";
+
+export interface IDeploymentWithRobot{
+    deployment: {
+        metadata: {
+            name: string
+        }
+    },
+    robot: {
+        id: string,
+        pod_id?: string
+    }
+
+}
 
 @Injectable()
 export class PiersService {
     private readonly logger = new Logger(PiersService.name);
     private kubeClientApi: any;
+    private kubeClientAppBatch: any;
     private kubeClientAppApi: any;
 
     constructor(
@@ -52,8 +66,148 @@ export class PiersService {
         });
     }
 
-    startRobotDeployment(robot: IRobot, waitTillStarted: boolean = true) {
-        return new Promise(async (resolve, reject) => {
+    createJob(namespace: string, jobData: any) {
+        return new Promise((resolve, reject) => {
+            if (process.env.DEV_KUBERNETES !== 'development') {
+                this.kubeClientAppBatch.createNamespacedJob(namespace, jobData).then((res: any) => {
+                    resolve(res);
+                }).catch((err: any) => {
+                    reject(err);
+                });
+            }
+            else {
+                this.logger.debug(' Create job by yourself', JSON.stringify(jobData));
+
+                return resolve({
+                    body: {
+                        metadata: {
+                            name: 'test'
+                        }
+                    }
+                })
+            }
+        });
+    }
+
+    createDeployement(namespace: string, deployment: any) {
+        return new Promise((resolve, reject) => {
+            if (process.env.DEV_KUBERNETES !== 'development') {
+                this.kubeClientAppApi.createNamespacedDeployment(namespace, deployment).then((res: any) => {
+                    resolve(res);
+                }).catch((err: any) => {
+                    reject(err);
+                });
+            }
+            else {
+                this.logger.debug(' Create deployment by yourself', JSON.stringify(deployment));
+                
+                return resolve({
+                    body: {
+                        metadata: {
+                            name: 'test'
+                        }
+                    }
+                })
+            }
+        });
+    }
+
+    startRobotJob(robot: IRobot) : Promise<IDeploymentWithRobot> {
+        return new Promise<IDeploymentWithRobot>(async (resolve, reject) => {
+            try {
+                this.logger.log('Starting Robot Job');
+                const image = await this.imageModel.findOne({where: {name: robot.image.name}});
+                const deployment = {
+                    apiVersion: 'batch/v1',
+                    kind: 'Job',
+                    metadata: {
+                        name: robot.identifier,
+                        labels: {
+                            appControlledBy: 'roboharbor',
+                            robotId: robot.id.toString()
+                        }
+                    },
+                    spec: {
+                        replicas: 1,
+                        template: {
+                            metadata: {
+                                labels: {
+                                    appControlledBy: 'roboharbor',
+                                    robotId: robot.id.toString()
+                                }
+                            }, 
+                            spec: {
+                                restartPolicy: 'Never',
+                                containers: [
+                                    {
+                                        env: [
+                                            ...this.getEnvironmentVariables(robot),
+                                        ],
+                                        name: 'robot',
+                                        image: image.imageContainerName + ':latest'
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                };
+                this.createJob('default', deployment).then((resDepl: any) => {
+                    this.logger.log('Job Created');
+                    this.logger.log(resDepl);
+                    this.socketService.waitForRobotRegistration(robot.identifier)
+                        .then((res: any) => {
+                            this.logger.log('Robot Registered');
+                            this.logger.log(res);
+                            resolve({
+                                deployment: {
+                                    metadata: {
+                                        name: resDepl.body.metadata.name
+                                    }
+                                },
+                                robot: {
+                                    pod_id: res.pod_id,
+                                    id: robot.identifier
+                                }
+                            });
+                        })
+                        .catch((err) => {
+                            reject(err);
+
+                        })
+                }).catch((err: any) => {
+                    this.logger.error(err);
+                    reject(err);
+                });
+            } catch (err) {
+                this.logger.error(err);
+                reject(err);
+            }
+        });
+    }
+
+    getEnvironmentVariables(robot: IRobot) {
+        return [
+            {
+                name: 'ROBO_ID',
+                value: robot.identifier.toString()
+            },
+            {
+                name: 'ROBO_HARBOR',
+                value: 'roboharbor:5001'
+            },
+            {
+                name: 'ROBO_SECRET',
+                value: "secret"
+            },
+            {
+                name: 'POD_NAME',
+                valueFrom: {fieldRef: {fieldPath: "metadata.name"}}
+            }
+        ];
+    }
+
+    startRobotDeployment(robot: IRobot, waitTillStarted: boolean = true) : Promise<IDeploymentWithRobot> {
+        return new Promise<IDeploymentWithRobot>(async (resolve, reject) => {
             try {
                 this.logger.log('Starting Robot Deployment');
                 const image = await this.imageModel.findOne({where: {name: robot.image.name}});
@@ -87,27 +241,50 @@ export class PiersService {
                                     {
                                         name: 'robot',
                                         image: image.imageContainerName+':'+(image.version || 'latest'),
+                                        env: [
+                                            ...this.getEnvironmentVariables(robot),
+                                        ],
                                     }
                                 ]
                             }
                         }
                     }
                 };
-                this.kubeClientAppApi.createNamespacedDeployment('default', deployment).then((res: any) => {
+                this.createDeployement('default', deployment).then((resDepl: any) => {
                     this.logger.log('Deployment Created');
-                    this.logger.log(res);
+                    this.logger.log(resDepl);
                     if (waitTillStarted) {
-                       /* this.socketService.waitForRobotRegistration(robot.identifier).then((res: any) => {
-                            this.logger.log('Robot Registered');
-                            this.logger.log(res);
-                            resolve({
-                                deployment: res.body
-                            });
-                        });*/
+                       this.socketService.waitForRobotRegistration(robot.identifier)
+                           .then((res: any) => {
+                                this.logger.log('Robot Registered');
+                                this.logger.log(res);
+                               resolve({
+                                   deployment: {
+                                       metadata: {
+                                           name: resDepl.body.metadata.name
+                                       }
+                                   },
+                                   robot: {
+                                       pod_id: res.pod_id,
+                                       id: robot.identifier
+                                   }
+                               });
+                        })
+                       .catch((err)=> {
+                           reject(err);
+
+                       })
                     }
                     else {
                         resolve({
-                            deployment: res.body
+                            deployment: {
+                                metadata: {
+                                    name: resDepl.body.metadata.name
+                                }
+                            },
+                            robot: {
+                                id: robot.identifier
+                            }
                         });
                     }
                 }).catch((err: any) => {
@@ -132,6 +309,7 @@ export class PiersService {
                     kc.loadFromCluster();
                     this.kubeClientApi = kc.makeApiClient(k8s.CoreV1Api);
                     this.kubeClientAppApi = kc.makeApiClient(k8s.AppsV1Api);
+                    this.kubeClientAppBatch = kc.makeApiClient(k8s.BatchV1Api);
                 }
                 else {
                     this.logger.log('Loading from Local files');
@@ -139,6 +317,7 @@ export class PiersService {
                     kc.loadFromDefault();
                     this.kubeClientApi = kc.makeApiClient(k8s.CoreV1Api);
                     this.kubeClientAppApi = kc.makeApiClient(k8s.AppsV1Api);
+                    this.kubeClientAppBatch = kc.makeApiClient(k8s.BatchV1Api);
                 }
 
                 const currentRoboHarborDeployments = this.getAllRoboHarborDeployments();
@@ -162,12 +341,43 @@ export class PiersService {
             try {
                 bot.image = {
                     name: "validate-robot",
+                    version: "latest"
                 }
                 let returnedRobot = null;
-                return this.startRobotDeployment(bot).then((res: any) => {
+                return this.startRobotJob(bot).then((res: any) => {
                     this.logger.log('Robot Deployment Started');
                     this.logger.log(res);
-                    resolve({source: true});
+                    return this.socketService.sendMessageToRobotWithResponse(res.robot.id,
+                        MessageBuilder.validateRobotMessage(bot),
+                        60000)
+                        .then((resVal: any) => {
+                            this.logger.debug('Robot Validation Response')
+                            this.logger.debug(resVal);
+                            if (resVal) {
+                                if (resVal.success === false) {
+                                    return resolve({
+                                        source: false,
+                                        isError: true,
+                                        error: resVal.error
+                                    } as IRoboShellValidationResult);
+
+                                }
+                                else {
+                                    return resolve({
+                                        source: true
+                                    } as IRoboShellValidationResult);
+                                }
+                            }
+                            else {
+                                return reject('No response from robot');
+                            }
+
+                        })
+                        .catch((err)=> {
+                            this.logger.error(err);
+                            reject(err);
+
+                        })
                 })
                 .catch((err: any) => {
                     this.logger.error(err);
