@@ -422,11 +422,11 @@ export class PiersService {
             // Find the replica set from the deployment
             this.kubeClientAppApi.deleteNamespacedDeployment(id, 'default').then((res: any) => {
                 // Delete all pods with the  label robotId=id
-                this.kubeClientApi.listNamespacedPod('default').then((res: any) => {
+                this.kubeClientAppApi.listNamespacedPod('default').then((res: any) => {
                     const pods = res.body.items;
                     for (const pod of pods) {
                         if (pod.metadata.labels && pod.metadata.labels.robotId === id) {
-                            this.kubeClientApi.deleteNamespacedPod(pod.metadata.name, 'default').then((res: any) => {
+                            this.kubeClientAppApi.deleteNamespacedPod(pod.metadata.name, 'default').then((res: any) => {
                                 this.logger.log('Pod Deleted');
                             }).catch((err: any) => {
                                 this.logger.error(err);
@@ -449,11 +449,11 @@ export class PiersService {
         return new Promise((resolve, reject) => {
             this.kubeClientAppBatch.deleteNamespacedJob(id, 'default').then((res: any) => {
                 // Delete all pods with the  label robotId=id
-                this.kubeClientApi.listNamespacedPod('default').then((res: any) => {
+                this.kubeClientAppApi.listNamespacedPod('default').then((res: any) => {
                     const pods = res.body.items;
                     for (const pod of pods) {
                         if (pod.metadata.labels && pod.metadata.labels.robotId === id) {
-                            this.kubeClientApi.deleteNamespacedPod(pod.metadata.name, 'default').then((res: any) => {
+                            this.kubeClientAppApi.deleteNamespacedPod(pod.metadata.name, 'default').then((res: any) => {
                                 this.logger.log('Pod Deleted');
                             }).catch((err: any) => {
                                 this.logger.error(err);
