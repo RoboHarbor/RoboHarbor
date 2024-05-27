@@ -124,7 +124,7 @@ export class PiersService {
                         name: robot.identifier,
                         labels: {
                             appControlledBy: 'roboharbor',
-                            robotId: robot.id.toString()
+                            robotId: robot.identifier
                         }
                     },
                     spec: {
@@ -133,7 +133,7 @@ export class PiersService {
                             metadata: {
                                 labels: {
                                     appControlledBy: 'roboharbor',
-                                    robotId: robot.id.toString()
+                                    robotId: robot.identifier
                                 }
                             },
                             spec: {
@@ -218,7 +218,7 @@ export class PiersService {
                         name: robot.identifier,
                         labels: {
                             appControlledBy: 'roboharbor',
-                            robotId: robot.id.toString()
+                            robotId: robot.identifier
                         }
                     },
                     spec: {
@@ -226,14 +226,14 @@ export class PiersService {
                         selector: {
                             matchLabels: {
                                 appControlledBy: 'roboharbor',
-                                robotId: robot.id.toString()
+                                robotId: robot.identifier
                             }
                         },
                         template: {
                             metadata: {
                                 labels: {
                                     appControlledBy: 'roboharbor',
-                                    robotId: robot.id.toString()
+                                    robotId: robot.identifier
                                 }
                             },
                             spec: {
@@ -419,17 +419,26 @@ export class PiersService {
 
     private deleteRobotDeployment(id: string, deletePod=true) {
         return new Promise((resolve, reject) => {
+            // Find the replica set from the deployment
             this.kubeClientAppApi.deleteNamespacedDeployment(id, 'default').then((res: any) => {
-                if (deletePod) {
-                    this.kubeClientApi.deleteNamespacedPod(id, 'default').then((res: any) => {
-                        resolve(res);
-                    }).catch((err: any) => {
-                        reject(err);
-                    });
-                }
-                else {
+                // Delete all pods with the  label robotId=id
+                this.kubeClientApi.listNamespacedPod('default').then((res: any) => {
+                    const pods = res.body.items;
+                    for (const pod of pods) {
+                        if (pod.metadata.labels && pod.metadata.labels.robotId === id) {
+                            this.kubeClientApi.deleteNamespacedPod(pod.metadata.name, 'default').then((res: any) => {
+                                this.logger.log('Pod Deleted');
+                            }).catch((err: any) => {
+                                this.logger.error(err);
+                            });
+                        }
+                    }
+                }).catch((err: any) => {
+                    this.logger.error(err);
+                })
+                .finally(() => {
                     resolve(res);
-                }
+                });
             }).catch((err: any) => {
                 reject(err);
             });
@@ -439,16 +448,24 @@ export class PiersService {
     private deleteRobotJob(id: string, deletePod=true) {
         return new Promise((resolve, reject) => {
             this.kubeClientAppBatch.deleteNamespacedJob(id, 'default').then((res: any) => {
-                if (deletePod) {
-                    this.kubeClientApi.deleteNamespacedPod(id, 'default').then((res: any) => {
-                        resolve(res);
-                    }).catch((err: any) => {
-                        reject(err);
-                    });
-                }
-                else {
+                // Delete all pods with the  label robotId=id
+                this.kubeClientApi.listNamespacedPod('default').then((res: any) => {
+                    const pods = res.body.items;
+                    for (const pod of pods) {
+                        if (pod.metadata.labels && pod.metadata.labels.robotId === id) {
+                            this.kubeClientApi.deleteNamespacedPod(pod.metadata.name, 'default').then((res: any) => {
+                                this.logger.log('Pod Deleted');
+                            }).catch((err: any) => {
+                                this.logger.error(err);
+                            });
+                        }
+                    }
+                }).catch((err: any) => {
+                    this.logger.error(err);
+                })
+                .finally(() => {
                     resolve(res);
-                }
+                });
             }).catch((err: any) => {
                 reject(err);
             });
