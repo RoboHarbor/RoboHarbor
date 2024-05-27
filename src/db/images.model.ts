@@ -34,4 +34,7 @@ export class Images extends Model implements IImagesModel {
 
     @Column({})
     version: string;
+
+    @Column({})
+    visible: boolean;
 }

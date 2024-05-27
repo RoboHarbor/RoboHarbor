@@ -16,8 +16,12 @@ export class HarborService {
     }
 
     async getAvailableRunnerPackages() {
-        return this.imageModel.findAll({
-            attributes: ["id", "name", "description", "imageContainerName", "version", "attributes"],
+        // Select all "visible is not false"
+        return this.imageModel.findAll( {
+            where: {
+                visible: true
+            },
+            attributes: ["id", "name", "title", "description", "imageContainerName", "version", "logo", "attributes"],
         });
     }
 

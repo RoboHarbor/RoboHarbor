@@ -4,9 +4,26 @@ FROM node:20
 WORKDIR /usr/src/app
 
 ### Needed Packages for the Server
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    wget \
+    curl \
+    g++ \
+    git \
+    inetutils-ping
 
 # Bundle app source
-COPY . .
+RUN mkdir -p /usr/src/app
+COPY .prettierignore .prettierrc .eslintrc.js .gitignore ./
+COPY package.json yarn.lock ./
+COPY client/src /usr/src/app/client/src
+COPY client/public /usr/src/app/client/public
+COPY client/package.json /usr/src/app/client/package.json
+COPY client/yarn.lock /usr/src/app/client/yarn.lock
+COPY client/tsconfig.json /usr/src/app/client/tsconfig.json
+COPY client/.prettierrc /usr/src/app/client/.prettierrc
+COPY nest-cli.json tsconfig.build.json tsconfig.json ./
+COPY src /usr/src/app/src
 
 RUN yarn install
 
@@ -18,4 +35,5 @@ RUN rm -rf $(ls -A -I "node_modules" -I "dist" -I "package.json" )
 
 EXPOSE 9000
 
-CMD [ "yarn", "run", "service"]
+
+CMD [ "yarn", "run", "start:prod"]

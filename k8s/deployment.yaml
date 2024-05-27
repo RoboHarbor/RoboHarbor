@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: roboharbor
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: roboharbor
+  template:
+    metadata:
+      labels:
+        app: roboharbor
+    spec:
+      containers:
+        - name: roboharbor
+          image: roboharbor/roboharbor:latest
+          ports:
+            - containerPort: 3000
+            - containerPort: 5001
+          env:
+            - name: DB_USER
+              value: "roboharbor"
+            - name: DB_PASS
+              value: "password"
+            - name: DB
+              value: "roboharbor"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: roboharbor
+spec:
+  selector:
+    app.kubernetes.io/name: roboharbor
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 5001
+      name: web
+    - protocol: TCP
+      port: 5001
+      targetPort: 5001
+      name: api

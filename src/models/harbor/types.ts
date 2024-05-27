@@ -12,7 +12,7 @@ export interface IImagesModel extends IImage {
 }
 
 
-export interface DetectedRunner {
+export interface DetectedImages {
     name: string,
 }
 
@@ -22,5 +22,5 @@ export interface IRoboShellValidationResult {
     source: boolean,
     isError?: boolean,
     error?: string,
-    possibleRunners?: DetectedRunner[]
+    possibleImages?: DetectedImages[]
 }

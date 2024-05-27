@@ -49,7 +49,9 @@ export class UiService {
                 name: "shell",
                 title: "Shell",
                 description: "Shell Runner",
-                version: "1.0.9",
+                visible: true,
+                logo: "https://automatedprogrammer.sh/wp-content/uploads/2018/05/cropped-Linux-Shell.png",
+                version: "1.0.12",
                 attributes: [
                     {
                         name: "command",
@@ -62,7 +64,9 @@ export class UiService {
                 name: "node",
                 title: "Node",
                 description: "Node JS",
-                version: "1.0.5",
+                version: "1.0.8",
+                visible: true,
+                logo: "https://logowik.com/content/uploads/images/nodejs.jpg",
                 attributes: [
                     {
                         name: "nodeVersion",
@@ -101,7 +105,9 @@ export class UiService {
                 name: "python",
                 description: "Python script",
                 title: "Python",
-                version: "1.0.8",
+                visible: true,
+                logo: "https://1000logos.net/wp-content/uploads/2020/08/Python-Logo.png",
+                version: "1.0.11",
                 attributes: [
                     {
                         name: "pythonVersion",
@@ -136,9 +142,10 @@ export class UiService {
             {
                 name: "validate-robot",
                 visible: false,
+                logo: "https://roboharbor.com/assets/images/roboharbor-logo.png",
                 description: "Python script",
                 title: "Validate Robot",
-                version: "latest",
+                version: "1.0.4",
                 attributes: [
 
                 ],

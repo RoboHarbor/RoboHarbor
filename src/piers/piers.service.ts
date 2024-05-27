@@ -135,7 +135,7 @@ export class PiersService {
                                     appControlledBy: 'roboharbor',
                                     robotId: robot.id.toString()
                                 }
-                            }, 
+                            },
                             spec: {
                                 restartPolicy: 'Never',
                                 containers: [
@@ -336,6 +336,24 @@ export class PiersService {
         });
     }
 
+    containsAFile(list_of_files: string[], file: string) {
+        return list_of_files.map(d => d.toLowerCase()).includes(file);
+    }
+
+    findPossibleImages(list_of_files: string[]) {
+        const possibleImages: any[] = [];
+        if (this.containsAFile(list_of_files, 'Dockerfile')) {
+            possibleImages.push({name: 'docker'});
+        }
+        if (this.containsAFile(list_of_files, 'package.json')) {
+            possibleImages.push({name: 'nodejs'});
+        }
+        if (this.containsAFile(list_of_files, 'requirements.txt')) {
+            possibleImages.push({name: 'python'});
+        }
+        return possibleImages;
+    }
+
     validateRobot(bot: IRobot) : Promise<IRoboShellValidationResult> {
         return new Promise<IRoboShellValidationResult>((resolve, reject) => {
             try {
@@ -345,8 +363,8 @@ export class PiersService {
                 }
                 let returnedRobot = null;
                 return this.startRobotJob(bot).then((res: any) => {
-                    this.logger.log('Robot Deployment Started');
-                    this.logger.log(res);
+                    this.logger.debug('Robot Deployment Started');
+                    this.logger.debug(res);
                     return this.socketService.sendMessageToRobotWithResponse(res.robot.id,
                         MessageBuilder.validateRobotMessage(bot),
                         60000)
@@ -364,7 +382,8 @@ export class PiersService {
                                 }
                                 else {
                                     return resolve({
-                                        source: true
+                                        source: true,
+                                        possibleImages: this.findPossibleImages(resVal.files),
                                     } as IRoboShellValidationResult);
                                 }
                             }
@@ -377,6 +396,9 @@ export class PiersService {
                             this.logger.error(err);
                             reject(err);
 
+                        })
+                        .finally(() => {
+                            this.deleteRobotJob(res.robot.id);
                         })
                 })
                 .catch((err: any) => {
@@ -392,6 +414,26 @@ export class PiersService {
                 this.logger.error(err);
                 reject(err);
             }
+        });
+    }
+
+    private deleteRobotDeployment(id: string) {
+        return new Promise((resolve, reject) => {
+            this.kubeClientAppApi.deleteNamespacedDeployment(id, 'default').then((res: any) => {
+                resolve(res);
+            }).catch((err: any) => {
+                reject(err);
+            });
+        });
+    }
+
+    private deleteRobotJob(id: string) {
+        return new Promise((resolve, reject) => {
+            this.kubeClientAppBatch.deleteNamespacedJob(id, 'default').then((res: any) => {
+                resolve(res);
+            }).catch((err: any) => {
+                reject(err);
+            });
         });
     }
 }

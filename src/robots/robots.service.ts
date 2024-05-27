@@ -66,6 +66,7 @@ export class RobotsService {
         bot = await this.attachFullInformationToRobot(bot);
         return this.pierService.validateRobot(bot)
             .then((res) => {
+                this.logger.debug("Robot validated: ", res);
                 if (res.isError) {
                     throw new RoboHarborError(res.error_code, res.error, res);
                     return;
