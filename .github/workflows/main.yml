@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - develop
 
 jobs:
   deploy:
@@ -21,5 +22,5 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           push: true
-          file: ./DockerFile-standalone
+          file: ./DockerFile
           tags: roboharbor/roboharbor:latest
