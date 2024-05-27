@@ -31,7 +31,6 @@ const SystemSettings = React.lazy(() => import('../pages/systemsettings'));
 // dashboards
 const DashBoard1 = React.lazy(() => import('../pages/dashboards/DashBoard1'));
 
-const Piers = React.lazy(() => import('../pages/Piers'));
 const Projects = React.lazy(() => import('../pages/Harbor'));
 
 // lamding
@@ -117,10 +116,6 @@ const AllRoutes = () => {
         {
           path: 'fleets',
           element: <LoadComponent component={Fleets} />,
-        },
-        {
-          path: 'piers',
-          element: <LoadComponent component={Piers} />,
         },
         {
           path: 'operations-center',

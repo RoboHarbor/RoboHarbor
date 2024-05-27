@@ -10,12 +10,7 @@ import { FormInput } from '../../components/form';
 
 
 // dummy data
-import {IPier} from "../../../../src/models/pier/types";
 import {useEffect, useState} from "react";
-import {getAll} from "../../helpers/api/pier";
-import CreateRobotModal from "../../components/modals/CreateRobotModal";
-import {IRobot} from "../../../../src/models/robot/types";
-import {getRobots} from "../../helpers/api/robots";
 import CreateSwarmModal from "../../components/modals/CreateSwarmModal";
 
 

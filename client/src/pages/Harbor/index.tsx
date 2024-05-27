@@ -14,7 +14,6 @@ import { ProjectsList } from './types';
 // dummy data
 import {IPier} from "../../../../src/models/pier/types";
 import {useEffect, useState} from "react";
-import {getAll} from "../../helpers/api/pier";
 import CreateRobotModal from "../../components/modals/CreateRobotModal";
 import {IRobot} from "../../../../src/models/robot/types";
 import {getRobots} from "../../helpers/api/robots";
@@ -135,14 +134,8 @@ const Projects = () => {
         });
     }
 
-    const reloadPiers = () => {
-        getAll().then((res) => {
-            setPiers(res.data);
-        });
-    }
 
     useEffect(() => {
-        reloadPiers();
         reloadRobots();
         setTimeout(() => {
             reloadRobots();

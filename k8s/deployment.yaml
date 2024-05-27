@@ -25,6 +25,8 @@ spec:
               value: "password"
             - name: DB
               value: "roboharbor"
+            - name: DB_HOST
+              value: "postgresdb1-postgresql"
 ---
 apiVersion: v1
 kind: Service
