@@ -30,6 +30,7 @@ export class AppGateway implements OnGatewayInit, OnGatewayConnection, OnGateway
   @ApiOperation({})
   handleDisconnect(@ConnectedSocket() client: any) {
     // Handle disconnection event
+    this.socketService.handleDisconnect(client, this.server);
   }
 
 

@@ -1,8 +1,5 @@
 import {BelongsTo, BelongsToMany, Column, Index, Model, NotNull, Table} from "sequelize-typescript";
-import {IPier} from "../models/pier/types";
 import {BotType, IRobot, ISourceInfo} from "../models/robot/types";
-import {Pier} from "./pier.model";
-import {Sequelize} from "sequelize";
 import {ISwarm} from "../../client/src/models/swarm/ISwarm";
 import {SwarmModel} from "./swarm.model";
 
@@ -40,13 +37,12 @@ export class Robot extends Model implements IRobot {
     })
     sourceInfo: ISourceInfo;
 
-    @Column({})
-    pierId: number;
 
     @Column({
         type: "json"
     } )
-    runner: any;
+    image: any;
+
 
     @Column({
         type: "json"

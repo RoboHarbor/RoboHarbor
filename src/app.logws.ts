@@ -9,6 +9,7 @@ import {
 import {ApiOperation} from "@nestjs/swagger";
 import {SocketService} from "./harbor/socket.service";
 import {LogWSService} from "./log/logws.service";
+import {Inject} from "@nestjs/common";
 
 @WebSocketGateway(3333, { transports: ['websocket'] })
 export class AppLogws implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
@@ -18,7 +19,8 @@ export class AppLogws implements OnGatewayInit, OnGatewayConnection, OnGatewayDi
   afterInit(server: any): any {
   }
 
-  constructor(private readonly socketService: LogWSService) {
+  constructor(
+      private readonly socketService: LogWSService) {
 
   }
 

@@ -2,7 +2,6 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import {DocumentBuilder, SwaggerModule} from "@nestjs/swagger";
 import {WsAdapter} from "@nestjs/platform-ws";
-import PierWorkerService from "./pierWorker/PierWorkerService";
 import {RoboHarborLogger} from "./app.logger";
 
 async function bootstrap() {
@@ -25,14 +24,7 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
 
-  if (process.env.NODE_ENV !== 'production' || process.env.MODULE === 'worker') {
-    setTimeout(() => {
-      const pierWorker = new PierWorkerService(process.env.PIER_NAME || "first-left");
-      pierWorker.startPier();
-    }, 2000);
 
-
-  }
 
   await app.listen(5001);
 }

@@ -1,8 +1,8 @@
-import {Inject, Injectable, Logger} from '@nestjs/common';
+import {Injectable, Logger} from '@nestjs/common';
 import {UserData} from "../models/auth/types";
 import {InjectModel} from "@nestjs/sequelize";
 import {User} from "../db/user.model";
-import {RunnerPackage} from "../db/runnerpackage.model";
+import {Images} from "../db/images.model";
 const {createHash} = require('crypto');
 
 
@@ -27,8 +27,8 @@ export class UiService {
     constructor(
         @InjectModel(User)
         private userModel: typeof User,
-        @InjectModel(RunnerPackage)
-        private runnerPackageModel: typeof RunnerPackage,
+        @InjectModel(Images)
+        private imagesModel: typeof Images,
     ) {
     }
     login(email: string, password: string) {
@@ -47,6 +47,7 @@ export class UiService {
         const basicPackages = [
             {
                 name: "shell",
+                title: "Shell",
                 description: "Shell Runner",
                 version: "1.0.9",
                 attributes: [
@@ -55,17 +56,13 @@ export class UiService {
                         type: "string"
                     }
                 ],
-                parameters: true,
-                environmentVariables: true,
-                title: "Shell Command",
-                logo: "https://cdn.icon-icons.com/icons2/2367/PNG/512/terminal_shell_icon_143501.png",
-                executionShellCommand: "bash",
+                imageContainerName: "roboharbor/shell",
             },
             {
                 name: "node",
+                title: "Node",
                 description: "Node JS",
                 version: "1.0.5",
-                title: "Node JS",
                 attributes: [
                     {
                         name: "nodeVersion",
@@ -98,11 +95,7 @@ export class UiService {
                         ]
                     }
                 ],
-                parameters: true,
-                environmentVariables: true,
-                logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d9/Node.js_logo.svg/1200px-Node.js_logo.svg.png",
-                executionShellCommand: "node",
-                shellCommandForPackageInstallation: "apt-get install nvm -y",
+                imageContainerName: "roboharbor/node",
             },
             {
                 name: "python",
@@ -138,19 +131,25 @@ export class UiService {
                         label: "Python Script"
                     }
                 ],
-                parameters: true,
-                environmentVariables: true,
-                executionShellCommand: "python3",
-                logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Python-logo-notext.svg/1200px-Python-logo-notext.svg.png",
-                shellCommandForPackageInstallation: "apt-get install python3 -y",
-            }
+                imageContainerName: "roboharbor/python",
+            },
+            {
+                name: "validate-robot",
+                visible: false,
+                description: "Python script",
+                title: "Validate Robot",
+                version: "latest",
+                attributes: [
 
+                ],
+                imageContainerName: "roboharbor/validate-robot",
+            }
         ]
 
-        const packages = await this.runnerPackageModel.findAll();
+        const packages = await this.imagesModel.findAll();
         if (packages.length === 0) {
             for (const basicPackage of basicPackages) {
-                await this.runnerPackageModel.create(basicPackage);
+                await this.imagesModel.create(basicPackage);
             }
         }
         else {
@@ -161,6 +160,9 @@ export class UiService {
                     if (packageToUpdate.version !== basicPackage.version) {
                         await packageToUpdate.update(basicPackage);
                     }
+                }
+                else{
+                    await this.imagesModel.create(basicPackage);
                 }
             }
         }

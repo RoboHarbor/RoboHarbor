@@ -4,7 +4,7 @@ Process Management with a user-interface. RoboHarbor helps you to launch and man
 ![img.png](img.png)
 
 Why RoboHarbor?
-RoboHarbor helps any developer to launch and control a robo in seconds. A robo is any process that you have developer that should run for ever or a specific time and needs to be monitored.
+RoboHarbor helps any developer to launch and control a robo in seconds. A robo is any process that should run forever or a specific time and needs to be monitored in an easy way not on your local pc.
 
 ## Features
 

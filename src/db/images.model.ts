@@ -1,39 +1,28 @@
 import {Column, DataType, Index, Model, Table} from "sequelize-typescript";
-import {IAttribute, IRunnerPackage} from "../models/harbor/types";
 import {Sequelize} from "sequelize";
+import {IAttribute, IImagesModel} from "../models/harbor/types";
 
 @Table
-export class RunnerPackage extends Model implements IRunnerPackage {
+export class Images extends Model implements IImagesModel {
     // Primary key
     @Column({primaryKey: true, autoIncrement: true})
     id: number;
 
     @Index({
-        name: "name",
+        name: "image_name",
         unique: true
     })
     @Column({})
     name: string;
 
     @Column({})
-    shellCommandForPackageInstallation: string;
-
-    @Column({})
-    executionShellCommand: string;
-
-    @Column({
-        type: "TEXT",
-    })
-    logo: string;
-
-    @Column({})
     title: string;
 
     @Column({})
-    parameters: boolean;
+    imageContainerName: string;
 
     @Column({})
-    environmentVariables: boolean;
+    logo: string;
 
     @Column({
         type: DataType.JSON
@@ -45,5 +34,4 @@ export class RunnerPackage extends Model implements IRunnerPackage {
 
     @Column({})
     version: string;
-
 }

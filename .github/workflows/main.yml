@@ -22,4 +22,4 @@ jobs:
         with:
           push: true
           file: ./DockerFile-standalone
-          tags: donnercody/roboharbor-standalone:latest
+          tags: roboharbor/roboharbor:latest

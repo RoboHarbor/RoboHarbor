@@ -29,6 +29,7 @@ import SourceShortDetails from "../../components/source/SourceShortDetails";
 import factory from "../../components/windows/factory";
 import {changePageTitle} from "../../redux/pageTitle/actions";
 import {useInterval} from "../../useInterval";
+import AddNewLayoutWindow from "../../components/modals/AddNewLayoutWindow";
 
 
 const RoboDetail = withSwal((props: any) => {
@@ -151,6 +152,9 @@ const RoboDetail = withSwal((props: any) => {
 
     return (
         <div style={{position: "relative", width: "100%", height: "100%"}}>
+            {showAddNewWindow && <AddNewLayoutWindow onAddNewWindow={() => {
+
+            }} onClose={() => setShowAddNewWindow(false)} />}
             <Layout
                 model={model}
                 onModelChange={(model) => {

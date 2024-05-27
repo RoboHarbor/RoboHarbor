@@ -71,7 +71,7 @@ const PasswordInput = ({
 
             {errors && errors[name] ? (
                 <Form.Control.Feedback type="invalid" className="d-block">
-                    {errors[name]['message']}
+                    {errors[name] && "message" in errors[name] ? errors[name]['message'] : null}
                 </Form.Control.Feedback>
             ) : null}
         </>

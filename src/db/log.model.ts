@@ -1,6 +1,4 @@
 import {Column, DataType, Index, Model, Table} from "sequelize-typescript";
-import {IAttribute, IRunnerPackage} from "../models/harbor/types";
-import {Sequelize} from "sequelize";
 import {ILog} from "../../client/src/models/log/types";
 
 @Table
