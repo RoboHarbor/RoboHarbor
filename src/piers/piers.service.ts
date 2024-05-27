@@ -49,12 +49,12 @@ export class PiersService {
             const list: any[] = [];
             this.logger.log('Getting all Robo Harbor Deployments');
             // Find all pods with the label appControlledBy=roboharbor
-            this.kubeClientApi
-                .listPodForAllNamespaces()
+            this.kubeClientAppApi
+                .listNamespacedDeployment('default')
                 .then((res: any) => {
                     const pods = res.body.items;
                     for (const pod of pods) {
-                        if (pod.metadata.labels.appControlledBy === 'roboharbor') {
+                        if (pod.metadata.labels && pod.metadata.labels.appControlledBy === 'roboharbor') {
                             list.push(pod)
                         }
                     }

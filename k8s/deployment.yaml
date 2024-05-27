@@ -1,3 +1,35 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: roboharbor
+rules:
+  - apiGroups: [ "" ]
+    resources: [ "pods", "services", "jobs", "deployments" ]
+    verbs: [ "get", "list", "watch", "create", "delete" ]
+  - apiGroups: [ "extensions" ]
+    resources: [ "deployments" ]
+    verbs: [ "get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: roboharbor
+  namespace: default
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: roboharbor
+subjects:
+  - kind: ServiceAccount
+    name: roboharbor
+    namespace: default
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: roboharbor
+  namespace: default
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -12,6 +44,8 @@ spec:
       labels:
         app: roboharbor
     spec:
+      serviceAccountName: roboharbor
+      automountServiceAccountToken: true
       containers:
         - name: roboharbor
           image: roboharbor/roboharbor:latest
