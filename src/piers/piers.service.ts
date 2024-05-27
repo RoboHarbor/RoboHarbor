@@ -417,20 +417,38 @@ export class PiersService {
         });
     }
 
-    private deleteRobotDeployment(id: string) {
+    private deleteRobotDeployment(id: string, deletePod=true) {
         return new Promise((resolve, reject) => {
             this.kubeClientAppApi.deleteNamespacedDeployment(id, 'default').then((res: any) => {
-                resolve(res);
+                if (deletePod) {
+                    this.kubeClientApi.deleteNamespacedPod(id, 'default').then((res: any) => {
+                        resolve(res);
+                    }).catch((err: any) => {
+                        reject(err);
+                    });
+                }
+                else {
+                    resolve(res);
+                }
             }).catch((err: any) => {
                 reject(err);
             });
         });
     }
 
-    private deleteRobotJob(id: string) {
+    private deleteRobotJob(id: string, deletePod=true) {
         return new Promise((resolve, reject) => {
             this.kubeClientAppBatch.deleteNamespacedJob(id, 'default').then((res: any) => {
-                resolve(res);
+                if (deletePod) {
+                    this.kubeClientApi.deleteNamespacedPod(id, 'default').then((res: any) => {
+                        resolve(res);
+                    }).catch((err: any) => {
+                        reject(err);
+                    });
+                }
+                else {
+                    resolve(res);
+                }
             }).catch((err: any) => {
                 reject(err);
             });
