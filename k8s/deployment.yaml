@@ -3,8 +3,11 @@ kind: Role
 metadata:
   name: roboharbor
 rules:
-  - apiGroups: [ "" ]
-    resources: [ "pods", "services", "jobs", "deployments" ]
+  - apiGroups: [ "apps" ]
+    resources: [ "pods", "services", "deployments" ]
+    verbs: [ "get", "list", "watch", "create", "delete" ]
+  - apiGroups: [ "batch" ]
+    resources: [ "jobs" ]
     verbs: [ "get", "list", "watch", "create", "delete" ]
   - apiGroups: [ "extensions" ]
     resources: [ "deployments" ]
