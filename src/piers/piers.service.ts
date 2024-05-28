@@ -399,7 +399,13 @@ export class PiersService {
 
                         })
                         .finally(() => {
-                            this.deleteRobotJob(res.robot.id);
+                            return this.deleteRobotJob(res.robot.id)
+                                .then((d) => {
+
+                                })
+                                .catch((er) => {
+
+                                })
                         })
                 })
                 .catch((err: any) => {
@@ -448,6 +454,7 @@ export class PiersService {
 
     private deleteRobotJob(id: string, deletePod=true) {
         return new Promise((resolve, reject) => {
+            this.logger.debug("Deleting Job for robot", id);
             this.kubeClientAppBatch.deleteNamespacedJob(id, 'default').then((res: any) => {
                 // Delete all pods with the  label robotId=id
                 this.kubeClientApi.listNamespacedPod('default').then((res: any) => {

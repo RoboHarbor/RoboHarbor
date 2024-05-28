@@ -439,7 +439,7 @@ export class SocketService {
             if (SocketService.connectedRobots.get(id)) {
                 for (const socket of SocketService.connectedRobots.get(id)) {
                     try {
-                        message.responseId = this.randomResponseId();
+                        message.responseId = this.randomResponseId() ;
                         message.waitForResponse = true;
                         const responseInfo: IMessageResponseInfo = {
                             resolve: resolve,
