@@ -32,14 +32,6 @@ const MENU_ITEMS: MenuItemTypes[] = [
         url: '/fleets',
     },
     {
-        key: 'piers',
-        label: 'Piers',
-        isTitle: false,
-        icon: 'mdi mdi-pier',
-        badge: { variant: 'success', text: '9+' },
-        url: '/piers',
-    },
-    {
         key: 'dashboard',
         label: 'Operations Center',
         isTitle: false,

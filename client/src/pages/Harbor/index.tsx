@@ -157,19 +157,15 @@ const Projects = () => {
                             <div className="col-auto">
                                 <div className="d-flex">
                                     <label className="d-flex align-items-center">
-                                        Piers
+                                        Types
                                         <FormInput
                                             type="select"
                                             name="phase"
                                             containerClass="d-inline-block ms-2"
                                             className="form-select-sm"
                                         >
-                                            <option>All Piers ({piers.length})</option>
-                                            {(piers || []).map((pier, index) => {
-                                                return (
-                                                    <option key={index.toString()}>{pier.identifier}</option>
-                                                );
-                                            })}
+                                            <option>All Types</option>
+
                                         </FormInput>
                                     </label>
                                 </div>

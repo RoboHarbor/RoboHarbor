@@ -5,6 +5,7 @@ import * as k8s from '@kubernetes/client-node';
 import {IRoboShellValidationResult} from "../models/harbor/types";
 import {InjectModel} from "@nestjs/sequelize";
 import {MessageBuilder, SocketService} from "../harbor/socket.service";
+import {AppsV1Api, BatchV1Api, CoreV1Api} from "@kubernetes/client-node";
 
 export interface IDeploymentWithRobot{
     deployment: {
@@ -22,9 +23,9 @@ export interface IDeploymentWithRobot{
 @Injectable()
 export class PiersService {
     private readonly logger = new Logger(PiersService.name);
-    private kubeClientApi: any;
-    private kubeClientAppBatch: any;
-    private kubeClientAppApi: any;
+    private kubeClientApi: CoreV1Api;
+    private kubeClientAppBatch: BatchV1Api;
+    private kubeClientAppApi: AppsV1Api;
 
     constructor(
         @Inject(forwardRef(() => SocketService))
@@ -422,11 +423,11 @@ export class PiersService {
             // Find the replica set from the deployment
             this.kubeClientAppApi.deleteNamespacedDeployment(id, 'default').then((res: any) => {
                 // Delete all pods with the  label robotId=id
-                this.kubeClientAppApi.listNamespacedPod('default').then((res: any) => {
+                this.kubeClientApi.listNamespacedPod('default').then((res: any) => {
                     const pods = res.body.items;
                     for (const pod of pods) {
                         if (pod.metadata.labels && pod.metadata.labels.robotId === id) {
-                            this.kubeClientAppApi.deleteNamespacedPod(pod.metadata.name, 'default').then((res: any) => {
+                            this.kubeClientApi.deleteNamespacedPod(pod.metadata.name, 'default').then((res: any) => {
                                 this.logger.log('Pod Deleted');
                             }).catch((err: any) => {
                                 this.logger.error(err);
@@ -449,11 +450,11 @@ export class PiersService {
         return new Promise((resolve, reject) => {
             this.kubeClientAppBatch.deleteNamespacedJob(id, 'default').then((res: any) => {
                 // Delete all pods with the  label robotId=id
-                this.kubeClientAppApi.listNamespacedPod('default').then((res: any) => {
+                this.kubeClientApi.listNamespacedPod('default').then((res: any) => {
                     const pods = res.body.items;
                     for (const pod of pods) {
                         if (pod.metadata.labels && pod.metadata.labels.robotId === id) {
-                            this.kubeClientAppApi.deleteNamespacedPod(pod.metadata.name, 'default').then((res: any) => {
+                            this.kubeClientApi.deleteNamespacedPod(pod.metadata.name, 'default').then((res: any) => {
                                 this.logger.log('Pod Deleted');
                             }).catch((err: any) => {
                                 this.logger.error(err);

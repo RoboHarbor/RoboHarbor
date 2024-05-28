@@ -163,7 +163,7 @@ const SourceConfiguration = ({bot, next, setBotValue, setPossibleRunners, isEdit
                             <p className="card-text">Load Data from Repository.</p>
                         </div>
                     </Col>
-                    {isValue("type", "forever") && <Col sm={3}>
+                    {<Col sm={3}>
                         <div className={"text-center card disabled nomargin card-body card-fill card-hoverable "+(isValue("source.type", "docker") ? "card-hoverable-selected" : "")}>
                             <i className={"mdi mdi-36px mdi-docker"}></i>
                             <h4  className="card-title">Docker Container</h4>

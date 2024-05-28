@@ -142,15 +142,36 @@ const CreateRobotModal = (props: {open: boolean, robot?: IRobot, onClose: () => 
                                                             <Col sm={3}>
                                                                 <div onClick={() => setBotValue("type", "forever")} className={"text-center card card-body card-hoverable "+(bot.type === "forever" ? "card-hoverable-selected" : "")}>
                                                                     <i className={"mdi mdi-36px mdi-all-inclusive"}></i>
-                                                                    <h4  className="card-title">Forever Running RobotModel</h4>
+                                                                    <h4  className="card-title">Forever Running Robot</h4>
                                                                     <p className="card-text">Start a robot and run forever with a watcher service.</p>
                                                                 </div>
                                                             </Col>
                                                             <Col sm={3}>
                                                                 <div onClick={() => setBotValue("type", "single")} className={"text-center card card-body card-hoverable "+(bot.type === "single" ? "card-hoverable-selected" : "")}>
+                                                                    <i className={"mdi mdi-36px mdi-gesture-tap"}></i>
+                                                                    <h4  className="card-title">Single Job Robot</h4>
+                                                                    <p className="card-text">Start a single job when done, stop the robot. </p>
+                                                                </div>
+                                                            </Col>
+                                                            <Col sm={3}>
+                                                                <div onClick={() => setBotValue("type", "cron")} className={"text-center card card-body card-hoverable "+(bot.type === "cron" ? "card-hoverable-selected" : "")}>
                                                                     <i className={"mdi mdi-36px mdi-clock-start"}></i>
-                                                                    <h4  className="card-title">Single Process Bot</h4>
-                                                                    <p className="card-text">Start a single job when done, stop the robot. Useful for crons.</p>
+                                                                    <h4  className="card-title">Cron Job Robot</h4>
+                                                                    <p className="card-text">Schedule your Robot on a given time schedule.</p>
+                                                                </div>
+                                                            </Col>
+                                                            <Col sm={3}>
+                                                                <div onClick={() => setBotValue("type", "webhook")} className={"text-center card card-body card-hoverable "+(bot.type === "webhook" ? "card-hoverable-selected" : "")}>
+                                                                    <i className={"mdi mdi-36px mdi-webhook"}></i>
+                                                                    <h4  className="card-title">Webhook triggered Robot</h4>
+                                                                    <p className="card-text">Robot will be started when a given webhook is triggered.</p>
+                                                                </div>
+                                                            </Col>
+                                                            <Col sm={3}>
+                                                                <div onClick={() => setBotValue("type", "pipeline")} className={"text-center card card-body card-hoverable "+(bot.type === "pipeline" ? "card-hoverable-selected" : "")}>
+                                                                    <i className={"mdi mdi-36px mdi-pipe"}></i>
+                                                                    <h4  className="card-title">Pipeline Robot</h4>
+                                                                    <p className="card-text">Trigger a Robot before or after another Robot is started/stopped.</p>
                                                                 </div>
                                                             </Col>
                                                         </Row>
