@@ -1,6 +1,6 @@
 import {forwardRef, Inject, Injectable, Logger} from '@nestjs/common';
 import { Socket } from 'socket.io';
-import {NoPierAvailableError} from "../errors/NoPierAvailableError";
+import {NoRobotAvailable} from "../errors/NoRobotAvailable";
 import {SendWebSocketMessageError} from "../errors/SendWebSocketMessageError";
 import {RobotsService} from "../robots/robots.service";
 import {InjectModel} from "@nestjs/sequelize";
@@ -363,7 +363,13 @@ export class SocketService {
 
             }
             else if (message.type === MessageTypes.GET_ROBOT_DETAILS) {
-                const robot = await this.robotModel.findByPk(message.roboId);
+                const robot = await this.robotModel.findOne({
+                    where: {
+                        identifier: message.roboId,
+                        secret: message.robotSecret
+                    }
+
+                })
                 if (robot) {
                     this.answer(socket, message, MessageBuilder.getRobotDetails(robot));
                 }
@@ -426,10 +432,6 @@ export class SocketService {
 
     }
 
-    getBestPier() {
-        return SocketService.connectedClients.keys().next().value;
-    }
-
     private randomResponseId() {
         return Math.floor(Math.random() * 1000000000).toString();
     }
@@ -463,8 +465,8 @@ export class SocketService {
                 }
             }
             else {
-                reject(new NoPierAvailableError({
-                    message: message
+                reject(new NoRobotAvailable({
+                    message: "Can not find robot with id "+id
                 }));
             }
         });
@@ -494,7 +496,7 @@ export class SocketService {
                 }
             }
             else {
-                reject(new NoPierAvailableError({
+                reject(new NoRobotAvailable({
                     message: message
                 }));
             }

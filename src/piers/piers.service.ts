@@ -6,6 +6,7 @@ import {IRoboShellValidationResult} from "../models/harbor/types";
 import {InjectModel} from "@nestjs/sequelize";
 import {MessageBuilder, SocketService} from "../harbor/socket.service";
 import {AppsV1Api, BatchV1Api, CoreV1Api} from "@kubernetes/client-node";
+import {Robot} from "../db/robot";
 
 export interface IDeploymentWithRobot{
     deployment: {
@@ -32,6 +33,8 @@ export class PiersService {
         private socketService: SocketService,
         @InjectModel(Images)
         private imageModel: typeof Images,
+        @InjectModel(Robot)
+        private robotModel: typeof Robot
     ) {
     }
 
@@ -42,7 +45,11 @@ export class PiersService {
         this.startPierService();
         setInterval(() => {
             this.startPierService();
-        }, 20000);
+        }, 5000);
+        this.checkForAllRobots();
+        setInterval(() => {
+            this.checkForAllRobots();
+        }, 60000);
     }
 
     getAllRoboHarborDeployments() {
@@ -50,20 +57,62 @@ export class PiersService {
             const list: any[] = [];
             this.logger.log('Getting all Robo Harbor Deployments');
             // Find all pods with the label appControlledBy=roboharbor
-            this.kubeClientAppApi
-                .listNamespacedDeployment('default')
-                .then((res: any) => {
-                    const pods = res.body.items;
+            return Promise.all([
+                this.kubeClientAppApi
+                    .listNamespacedDeployment('default').then((res: any) => { return res.body.items.map((e) => {
+                            e.kind = 'Deployment';
+                            return e;
+                        });
+                    }),
+                this.kubeClientAppBatch
+                            .listNamespacedCronJob('default').then((res: any) => { return res.body.items.map((e) => {
+                            e.kind = 'CronJob';
+                            return e;
+                        });
+                    }),
+                this.kubeClientAppBatch
+                    .listNamespacedJob('default').then((res: any) => { return res.body.items.map((e) => {
+                            e.kind = 'Job';
+                            return e;
+                        });
+                    })
+            ])
+                .then((res: any[]) => {
+
+                    const pods = res.flatMap((r) => r);
                     for (const pod of pods) {
                         if (pod.metadata.labels && pod.metadata.labels.appControlledBy === 'roboharbor') {
                             list.push(pod)
                         }
                     }
+                    return resolve(list);
                 }).catch((err: any) => {
                     this.logger.error(err);
                     reject(err);
                 });
-            return resolve(list);
+        });
+    }
+
+    createCronJob(namespace: string, jobData: any) {
+        return new Promise((resolve, reject) => {
+            if (process.env.DEV_KUBERNETES !== 'development') {
+                this.kubeClientAppBatch.createNamespacedCronJob(namespace, jobData).then((res: any) => {
+                    resolve(res);
+                }).catch((err: any) => {
+                    reject(err);
+                });
+            }
+            else {
+                this.logger.debug(' Create cron job by yourself', JSON.stringify(jobData));
+
+                return resolve({
+                    body: {
+                        metadata: {
+                            name: 'test'
+                        }
+                    }
+                })
+            }
         });
     }
 
@@ -113,14 +162,14 @@ export class PiersService {
         });
     }
 
-    startRobotJob(robot: IRobot) : Promise<IDeploymentWithRobot> {
+    startRobotCronJob(robot: IRobot, directStart: boolean = true) : Promise<IDeploymentWithRobot> {
         return new Promise<IDeploymentWithRobot>(async (resolve, reject) => {
             try {
                 this.logger.log('Starting Robot Job');
                 const image = await this.imageModel.findOne({where: {name: robot.image.name}});
                 const deployment = {
                     apiVersion: 'batch/v1',
-                    kind: 'Job',
+                    kind: 'CronJob',
                     metadata: {
                         name: robot.identifier,
                         labels: {
@@ -129,7 +178,7 @@ export class PiersService {
                         }
                     },
                     spec: {
-                        replicas: 1,
+                        replicas: directStart ? 1 : 0,
                         template: {
                             metadata: {
                                 labels: {
@@ -145,36 +194,27 @@ export class PiersService {
                                             ...this.getEnvironmentVariables(robot),
                                         ],
                                         name: 'robot',
-                                        image: image.imageContainerName + ':latest'
+                                        image: image.imageContainerName+':'+(image.imageContainerVersion || 'latest'),
                                     }
                                 ]
                             }
                         }
                     }
                 };
-                this.createJob('default', deployment).then((resDepl: any) => {
+                this.createCronJob('default', deployment).then((resDepl: any) => {
                     this.logger.log('Job Created');
                     this.logger.log(resDepl);
-                    this.socketService.waitForRobotRegistration(robot.identifier)
-                        .then((res: any) => {
-                            this.logger.log('Robot Registered');
-                            this.logger.log(res);
-                            resolve({
-                                deployment: {
-                                    metadata: {
-                                        name: resDepl.body.metadata.name
-                                    }
-                                },
-                                robot: {
-                                    pod_id: res.pod_id,
-                                    id: robot.identifier
-                                }
-                            });
-                        })
-                        .catch((err) => {
-                            reject(err);
+                    resolve({
+                        deployment: {
+                            metadata: {
+                                name: resDepl.body.metadata.name
+                            }
+                        },
+                        robot: {
+                            id: robot.identifier
+                        }
+                    });
 
-                        })
                 }).catch((err: any) => {
                     this.logger.error(err);
                     reject(err);
@@ -186,7 +226,100 @@ export class PiersService {
         });
     }
 
-    getEnvironmentVariables(robot: IRobot) {
+    startRobotJob(robot: IRobot, waitTillStarted: boolean = false, directStart: boolean = true) : Promise<IDeploymentWithRobot> {
+        return new Promise<IDeploymentWithRobot>(async (resolve, reject) => {
+            try {
+                this.logger.log('Starting Robot Job');
+                const image = await this.imageModel.findOne({where: {name: robot.image.name}});
+                const deployment = {
+                    apiVersion: 'batch/v1',
+                    kind: 'Job',
+                    metadata: {
+                        name: robot.identifier,
+                        labels: {
+                            appControlledBy: 'roboharbor',
+                            robotId: robot.identifier
+                        }
+                    },
+                    spec: {
+                        replicas: directStart ? 1 : 0,
+                        template: {
+                            metadata: {
+                                labels: {
+                                    appControlledBy: 'roboharbor',
+                                    robotId: robot.identifier
+                                }
+                            },
+                            spec: {
+                                restartPolicy: 'Never',
+                                containers: [
+                                    {
+                                        env: [
+                                            ...this.getEnvironmentVariables(robot),
+                                        ],
+                                        name: 'robot',
+                                        image: image.imageContainerName+':'+(image.imageContainerVersion || 'latest'),
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                };
+                this.createJob('default', deployment).then((resDepl: any) => {
+                    this.logger.log('Job Created');
+                    this.logger.log(resDepl);
+                    if (waitTillStarted) {
+                        this.socketService.waitForRobotRegistration(robot.identifier)
+                            .then((res: any) => {
+                                this.logger.log('Robot Registered');
+                                this.logger.log(res);
+                                resolve({
+                                    deployment: {
+                                        metadata: {
+                                            name: resDepl.body.metadata.name
+                                        }
+                                    },
+                                    robot: {
+                                        pod_id: res.pod_id,
+                                        id: robot.identifier
+                                    }
+                                });
+                            })
+                            .catch((err) => {
+                                reject(err);
+
+                            })
+                    }
+                    else {
+                        resolve({
+                            deployment: {
+                                metadata: {
+                                    name: resDepl.body.metadata.name
+                                }
+                            },
+                            robot: {
+                                id: robot.identifier
+                            }
+                        });
+                    }
+
+                }).catch((err: any) => {
+                    this.logger.error(err);
+                    reject(err);
+                });
+            } catch (err) {
+                this.logger.error(err);
+                reject(err);
+            }
+        });
+    }
+
+    getSpecialEnvirons(robot: IRobot) {
+        return [];
+    }
+
+    getEnvironmentVariables(robot: IRobot, currentEnv: any[] = []) {
+        const specialEnvirons = this.getSpecialEnvirons(robot);
         return [
             {
                 name: 'ROBO_ID',
@@ -198,16 +331,57 @@ export class PiersService {
             },
             {
                 name: 'ROBO_SECRET',
-                value: "secret"
+                value: robot.secret.toString()
             },
             {
                 name: 'POD_NAME',
                 valueFrom: {fieldRef: {fieldPath: "metadata.name"}}
-            }
-        ];
+            },
+            ...specialEnvirons
+        ].filter((env) => {
+            return !currentEnv.find((e) => e.name === env.name);
+        });
     }
 
-    startRobotDeployment(robot: IRobot, waitTillStarted: boolean = true) : Promise<IDeploymentWithRobot> {
+    createRobotInCluster(robot: IRobot) {
+        return new Promise((resolve, reject) => {
+            try {
+                if (robot.type == "forever") {
+                    this.startRobotDeployment(robot, false, robot.enabled == true ? 1 : 0).then((res: any) => {
+                        resolve(res);
+                    }).catch((err: any) => {
+                        reject(err);
+                    });
+                }
+                else if (robot.type == "single") {
+                    this.startRobotJob(robot, false, false).then((res: any) => {
+                        resolve(res);
+                    }).catch((err: any) => {
+                        reject(err);
+                    });
+                }
+                else if (robot.type == "cron") {
+                    this.startRobotCronJob(robot, false).then((res: any) => {
+                        resolve(res);
+                    }).catch((err: any) => {
+                        reject(err);
+                    });
+                }
+                else if (robot.type == "pipeline") {
+                    this.startRobotJob(robot, false, false).then((res: any) => {
+                        resolve(res);
+                    }).catch((err: any) => {
+                        reject(err);
+                    });
+                }
+            }
+            catch(e) {
+                reject(e);
+            }
+        });
+    }
+
+    startRobotDeployment(robot: IRobot, waitTillStarted: boolean = true, replicas: number = 1) : Promise<IDeploymentWithRobot> {
         return new Promise<IDeploymentWithRobot>(async (resolve, reject) => {
             try {
                 this.logger.log('Starting Robot Deployment');
@@ -223,7 +397,7 @@ export class PiersService {
                         }
                     },
                     spec: {
-                        replicas: 1,
+                        replicas: replicas,
                         selector: {
                             matchLabels: {
                                 appControlledBy: 'roboharbor',
@@ -241,7 +415,7 @@ export class PiersService {
                                 containers: [
                                     {
                                         name: 'robot',
-                                        image: image.imageContainerName+':'+(image.version || 'latest'),
+                                        image: image.imageContainerName+':'+(image.imageContainerVersion || 'latest'),
                                         env: [
                                             ...this.getEnvironmentVariables(robot),
                                         ],
@@ -301,8 +475,11 @@ export class PiersService {
     }
 
     startPierService() {
-        return new Promise((resolve, reject) => {
+        return new Promise<void>((resolve, reject) => {
             try {
+                if (this.kubeClientApi && this.kubeClientAppApi && this.kubeClientAppBatch) {
+                    resolve();
+                }
                 this.logger.log('Starting Pier Service');
                 if (process.env.NODE_ENV !== 'development') {
                     this.logger.log('Loading from Cluster');
@@ -320,15 +497,6 @@ export class PiersService {
                     this.kubeClientAppApi = kc.makeApiClient(k8s.AppsV1Api);
                     this.kubeClientAppBatch = kc.makeApiClient(k8s.BatchV1Api);
                 }
-
-                const currentRoboHarborDeployments = this.getAllRoboHarborDeployments();
-                currentRoboHarborDeployments.then((res: any) => {
-                    this.logger.log('All Robo Harbor Deployments:');
-                    this.logger.log(res);
-                }).catch((err: any) => {
-                    this.logger.error(err);
-                    reject(err);
-                });
             }
             catch(err) {
                 this.logger.error(err);
@@ -363,7 +531,7 @@ export class PiersService {
                     version: "latest"
                 }
                 let returnedRobot = null;
-                return this.startRobotJob(bot).then((res: any) => {
+                return this.startRobotJob(bot, true, true).then((res: any) => {
                     this.logger.debug('Robot Deployment Started');
                     this.logger.debug(res);
                     return this.socketService.sendMessageToRobotWithResponse(res.robot.id,
@@ -432,12 +600,17 @@ export class PiersService {
                 this.kubeClientApi.listNamespacedPod('default').then((res: any) => {
                     const pods = res.body.items;
                     for (const pod of pods) {
-                        if (pod.metadata.labels && pod.metadata.labels.robotId === id) {
-                            this.kubeClientApi.deleteNamespacedPod(pod.metadata.name, 'default').then((res: any) => {
-                                this.logger.log('Pod Deleted');
-                            }).catch((err: any) => {
-                                this.logger.error(err);
-                            });
+                        try {
+                            if (pod.metadata.labels && pod.metadata.labels.robotId === id) {
+                                this.kubeClientApi.deleteNamespacedPod(pod.metadata.name, 'default').then((res: any) => {
+                                    this.logger.log('Pod Deleted');
+                                }).catch((err: any) => {
+                                    this.logger.error(err);
+                                });
+                            }
+                        }
+                        catch(e) {
+
                         }
                     }
                 }).catch((err: any) => {
@@ -460,12 +633,17 @@ export class PiersService {
                 this.kubeClientApi.listNamespacedPod('default').then((res: any) => {
                     const pods = res.body.items;
                     for (const pod of pods) {
-                        if (pod.metadata.labels && pod.metadata.labels.robotId === id) {
-                            this.kubeClientApi.deleteNamespacedPod(pod.metadata.name, 'default').then((res: any) => {
-                                this.logger.log('Pod Deleted');
-                            }).catch((err: any) => {
-                                this.logger.error(err);
-                            });
+                        try {
+                            if (pod.metadata.labels && pod.metadata.labels.robotId === id) {
+                                this.kubeClientApi.deleteNamespacedPod(pod.metadata.name, 'default').then((res: any) => {
+                                    this.logger.log('Pod Deleted');
+                                }).catch((err: any) => {
+                                    this.logger.error(err);
+                                });
+                            }
+                        }
+                        catch(e) {
+
                         }
                     }
                 }).catch((err: any) => {
@@ -477,6 +655,226 @@ export class PiersService {
             }).catch((err: any) => {
                 reject(err);
             });
+        });
+    }
+
+    checkForAllRobots() {
+        return new Promise(async (resolve, reject) => {
+            this.logger.log('Checking for all robots');
+            const robots = await this.robotModel.findAll();
+            return Promise.all(
+                robots.map((robot: Robot) => {
+                    return this.checkIfRobotIsCreated(robot);
+                })
+            ).then(async (res: any) => {
+                this.logger.log('All Robots created');
+                this.logger.log(res);
+                resolve(res);
+
+                const allRobotsDeployed = await this.getAllRoboHarborDeployments();
+                for (const robot of allRobotsDeployed) {
+                    try {
+                        const found = await this.robotModel.findOne({where: {identifier: robot.metadata?.labels?.robotId}});
+                        if (!found) {
+                            if (robot.spec?.template.spec?.containers[0]?.image.includes("validate-robot") != false) {
+                                continue;
+                            }
+                            try {
+                                this.removeRobotFromCluster(robot);
+                            }
+                            catch(e) {
+
+                            }
+                        }
+                    }
+                    catch(e) {
+
+                    }
+                }
+            });
+        });
+    }
+
+    createRobot(robot: Robot) {
+        return new Promise((resolve, reject) => {
+            this.logger.log('Creating Robot');
+            return this.checkIfRobotIsCreated(robot).then((res: any) => {
+                this.logger.log('All Robots');
+                this.logger.log(res);
+                return resolve(res);
+            });
+        });
+    }
+
+    runRobot(robot: Robot) {
+        return new Promise((resolve, reject) => {
+            this.logger.log('Creating Robot');
+            return this.checkIfRobotIsCreated(robot).then((res: any) => {
+                if (res && res.metadata?.labels?.robotId === robot.identifier) {
+                    if (res.spec?.replicas > 0) {
+                        return resolve(res);
+                    }
+                    else {
+                        return this.updateRobot(robot, res)
+                            .then((res: any) => {
+                                return resolve(res);
+                            })
+                            .catch((err: any) => {
+                                return reject(err);
+                            });
+                    }
+                }
+                return resolve(res);
+            });
+        });
+    }
+
+    stopRobot(robot: Robot) {
+        return new Promise((resolve, reject) => {
+            this.logger.log('Creating Robot');
+            return this.checkIfRobotIsCreated(robot).then((res: any) => {
+                this.logger.log('All Robots');
+                this.logger.log(res);
+                return resolve(res);
+            });
+        });
+    }
+
+    private checkIfRobotIsCreated(robot: Robot) {
+        return new Promise((resolve, reject) => {
+            this.logger.log('Checking if robot is created '+robot.identifier);
+            return this.getAllRoboHarborDeployments().then((res: any) => {
+                this.logger.log('All Robots');
+                this.logger.log(res);
+                const found = res.find((r: any) => r.metadata?.labels?.robotId === robot.identifier);
+
+                if (!found) {
+                    return this.createRobotInCluster(robot).then((res: any) => {
+                        return resolve(res);
+                    }).catch((err: any) => {
+                        return reject(err);
+                    });
+                }
+
+                return resolve(found);
+            });
+        });
+    }
+
+    private removeRobotFromCluster(robot: any) {
+        return new Promise((resolve, reject) => {
+            this.logger.log('Removing Robot from Cluster');
+            if (robot.kind == 'Deployment') {
+                return this.deleteRobotDeployment(robot.metadata?.name).then((res: any) => {
+                    this.logger.log('Robot Removed');
+                    this.logger.log(res);
+                    return resolve(res);
+                })
+                    .catch((err: any) => {
+                        return reject(err);
+                    });
+            }
+            else if (robot.kind == 'Job') {
+                return this.deleteRobotJob(robot.metadata?.name).then((res: any) => {
+                    this.logger.log('Robot Removed');
+                    this.logger.log(res);
+                    return resolve(res);
+                })
+                    .catch((err: any) => {
+                        return reject(err);
+                    });
+            }
+            else if (robot.kind == 'CronJob') {
+                return this.kubeClientAppBatch.deleteNamespacedCronJob(robot.metadata?.name, 'default').then((res: any) => {
+                    this.logger.log('Robot Removed');
+                    this.logger.log(res);
+                    return resolve(res);
+                })
+                    .catch((err: any) => {
+                        return reject(err);
+                    });
+            }
+            else {
+                return resolve(robot);
+            }
+        });
+    }
+
+    private updateRobot(robot: Robot, config: any) {
+        return new Promise((resolve, reject) => {
+            if (config && robot) {
+                config = JSON.parse(JSON.stringify(config));
+                delete config.status;
+                delete config.metadata?.annotations;
+                delete config.metadata?.managedFields;
+                delete config.metadata?.creationTimestamp;
+                delete config.metadata?.generation;
+                delete config.metadata?.resourceVersion;
+                delete config.metadata?.selfLink;
+                delete config.metadata?.uid;
+                delete config.metadata?.ownerReferences;
+
+                delete config.spec?.strategy;
+                delete config.spec?.progressDeadlineSeconds;
+                delete config.spec?.revisionHistoryLimit;
+
+                const newConfig = JSON.parse(JSON.stringify(config));
+                if (config.spec && config.spec.replicas == 0 && robot.enabled == true) {
+                    config.spec.replicas = 1;
+                }
+                else if (config.spec && config.spec.replicas > 0 && robot.enabled == false) {
+                    config.spec.replicas = 0;
+                }
+
+                if (config.spec?.containers && config.spec.containers.length > 0) {
+                    config.spec.containers[0].env = [
+                        ...config.spec.containers[0].env,
+                        ...this.getEnvironmentVariables(robot, config.spec.containers[0].env),
+                    ];
+                }
+
+                if (JSON.stringify(newConfig) != JSON.stringify(config)) {
+                    if (robot.type == "forever") {
+                        return this.kubeClientAppApi.replaceNamespacedDeployment(robot.identifier, 'default', config).then((res: any) => {
+                            this.logger.log('Robot Updated');
+                            this.logger.log(res);
+                            return resolve(res);
+                        }).catch((err: any) => {
+                            return reject(err);
+                        });
+                    }
+                    else if (robot.type == "single") {
+                        return this.kubeClientAppBatch.replaceNamespacedJob(robot.identifier, 'default', config).then((res: any) => {
+                            this.logger.log('Robot Updated');
+                            this.logger.log(res);
+                            return resolve(res);
+                        }).catch((err: any) => {
+                            return reject(err);
+                        });
+                    }
+                    else if (robot.type == "cron") {
+                        return this.kubeClientAppBatch.replaceNamespacedCronJob(robot.identifier, 'default', config).then((res: any) => {
+                            this.logger.log('Robot Updated');
+                            this.logger.log(res);
+                            return resolve(res);
+                        }).catch((err: any) => {
+                            return reject(err);
+                        });
+                    }
+                    else if (robot.type == "pipeline") {
+                        return this.kubeClientAppBatch.replaceNamespacedJob(robot.identifier, 'default', config).then((res: any) => {
+                            this.logger.log('Robot Updated');
+                            this.logger.log(res);
+                            return resolve(res);
+                        }).catch((err: any) => {
+                            return reject(err);
+                        });
+                    }
+                }
+                else {
+                    return resolve(config);
+                }
+            }
         });
     }
 }

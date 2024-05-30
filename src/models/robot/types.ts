@@ -1,7 +1,9 @@
 
 export enum BotType {
     forever = 'forever',
-    manual = 'manual',
+    single = 'single',
+    cron = 'cron',
+    pipeline = 'pipeline',
 }
 
 export interface ISourceInfo {
@@ -22,11 +24,14 @@ export interface ICredentialsInfo{
 export interface IRobot {
     image: {
         name: string,
+        attributes?: any,
         version?: string,
         config?: any,
     };
-    windowJson?: any;
+    secret?: string;
+    robotContent?: any;
     updatedAt?: Date;
+    files?: any;
 
     identifier?: string;
     source: {

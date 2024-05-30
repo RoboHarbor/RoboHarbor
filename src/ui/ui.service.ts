@@ -51,20 +51,20 @@ export class UiService {
                 description: "Shell Runner",
                 visible: true,
                 logo: "https://automatedprogrammer.sh/wp-content/uploads/2018/05/cropped-Linux-Shell.png",
-                version: "1.0.12",
+                version: "1.0.13",
                 attributes: [
                     {
                         name: "command",
                         type: "string"
                     }
                 ],
-                imageContainerName: "roboharbor/shell",
+                imageContainerName: "roboharbor/robo-pier-shell",
             },
             {
                 name: "node",
                 title: "Node",
                 description: "Node JS",
-                version: "1.0.8",
+                version: "1.0.9",
                 visible: true,
                 logo: "https://logowik.com/content/uploads/images/nodejs.jpg",
                 attributes: [
@@ -73,33 +73,33 @@ export class UiService {
                         type: "enum",
                         values: [
                             {
-                                value: "14",
-                                label: "14"
+                                value: "10",
+                                label: "10"
                             },
                             {
                                 value: "12",
                                 label: "12"
                             },
                             {
-                                value: "10",
-                                label: "10"
+                                value: "14",
+                                label: "14"
                             },
                             {
                                 value: "16",
                                 label: "16"
                             },
                             {
+                                value: "18",
+                                label: "18"
+                            },
+                            {
                                 value: "20",
                                 label: "20"
                             },
-                            {
-                                value: "18",
-                                label: "18"
-                            }
                         ]
                     }
                 ],
-                imageContainerName: "roboharbor/node",
+                imageContainerName: "roboharbor/robo-pier-nodejs",
             },
             {
                 name: "python",
@@ -107,12 +107,20 @@ export class UiService {
                 title: "Python",
                 visible: true,
                 logo: "https://1000logos.net/wp-content/uploads/2020/08/Python-Logo.png",
-                version: "1.0.11",
+                version: "1.0.14",
                 attributes: [
                     {
                         name: "pythonVersion",
                         type: "enum",
                         values: [
+                            {
+                                value: "3.11",
+                                label: "3.11"
+                            },
+                            {
+                                value: "3.10",
+                                label: "3.10"
+                            },
                             {
                                 value: "3.9",
                                 label: "3.9"
@@ -137,7 +145,7 @@ export class UiService {
                         label: "Python Script"
                     }
                 ],
-                imageContainerName: "roboharbor/python",
+                imageContainerName: "roboharbor/robo-pier-python",
             },
             {
                 name: "validate-robot",
@@ -145,7 +153,7 @@ export class UiService {
                 logo: "https://roboharbor.com/assets/images/roboharbor-logo.png",
                 description: "Python script",
                 title: "Validate Robot",
-                version: "1.0.4",
+                version: "1.0.5",
                 attributes: [
 
                 ],

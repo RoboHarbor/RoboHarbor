@@ -84,7 +84,7 @@ export class RobotsController {
         try {
             return await this.robotService.getAllRobots();
         } catch (e) {
-            this.logger.error("robot creation error: ", e);
+            this.logger.error("robot receive all error: ", e);
             if (e instanceof RoboHarborError) {
                 throw e.getHttpException();
             }
@@ -143,7 +143,7 @@ export class RobotsController {
         try {
             return await this.robotService.getRobot(id);
         } catch (e) {
-            this.logger.error("robot creation error: ", e);
+            this.logger.error("robot get error: ", e);
             if (e instanceof RoboHarborError) {
                 throw e.getHttpException();
             }
@@ -171,7 +171,7 @@ export class RobotsController {
         try {
             return await this.robotService.stopRobot(id);
         } catch (e) {
-            this.logger.error("robot creation error: ", e);
+            this.logger.error("robot stop error: ", e);
             if (e instanceof RoboHarborError) {
                 throw e.getHttpException();
             }
@@ -185,7 +185,7 @@ export class RobotsController {
         try {
             return await this.robotService.deleteRobot(id);
         } catch (e) {
-            this.logger.error("robot creation error: ", e);
+            this.logger.error("robot delete error: ", e);
             if (e instanceof RoboHarborError) {
                 throw e.getHttpException();
             }

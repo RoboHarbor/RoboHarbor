@@ -22,12 +22,20 @@ export class Images extends Model implements IImagesModel {
     imageContainerName: string;
 
     @Column({})
+    imageContainerVersion: string;
+
+    @Column({})
     logo: string;
 
     @Column({
         type: DataType.JSON
     })
     attributes: IAttribute[];
+
+    @Column({
+        type: DataType.JSON
+    })
+    config: any;
 
     @Column({})
     description: string;

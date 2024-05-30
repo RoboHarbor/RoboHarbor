@@ -1,6 +1,6 @@
 import {RoboHarborError} from "./RoboHarborError";
 
-export class NoPierAvailableError extends RoboHarborError {
+export class NoRobotAvailable extends RoboHarborError {
     constructor( body?: any) {
         super(111, "No pier available", body);
     }

@@ -117,8 +117,8 @@ const CreateRobotModal = (props: {open: boolean, robot?: IRobot, onClose: () => 
                                         </Nav.Item>
                                         <Nav.Item as="li">
                                             <Nav.Link as={Link} to="#"
-                                                      onClick={() => isEdit ? setKey("runner") : null}
-                                                      eventKey="runner" className="rounded-0 pt-2 pb-2">
+                                                      onClick={() => isEdit ? setKey("image") : null}
+                                                      eventKey="image" className="rounded-0 pt-2 pb-2">
                                                 <i className="mdi mdi-circle circle-outline me-1"></i>
                                                 <span className="d-none d-sm-inline">Runner</span>
                                             </Nav.Link>
@@ -208,7 +208,7 @@ const CreateRobotModal = (props: {open: boolean, robot?: IRobot, onClose: () => 
                                                         setBotValue={setBotValue}
                                                         setPossibleRunners={setPossibleImages}
                                                         next={() => {
-                                                            setKey("runner");
+                                                            setKey("image");
                                                         }}
                                                         previous={() => {
                                                             setKey("bottype");
@@ -218,9 +218,9 @@ const CreateRobotModal = (props: {open: boolean, robot?: IRobot, onClose: () => 
                                                 )}
                                             />
                                         </Tab.Pane>
-                                        <Tab.Pane eventKey="runner">
+                                        <Tab.Pane eventKey="image">
                                             <Step
-                                                id="runner"
+                                                id="image"
                                                 render={({ previous }) => (
                                                     <RobotRunnerTypeConfiguration
                                                         bot={bot}
@@ -251,7 +251,7 @@ const CreateRobotModal = (props: {open: boolean, robot?: IRobot, onClose: () => 
                                                                         <ConfigurationContainer
                                                                             bot={bot}
                                                                             onChange={(config: any, bot: any) => {
-                                                                                setBotValue("runner.config", config);
+                                                                                setBotValue("image.config", config);
                                                                                 setBot(bot);
                                                                             }}
                                                                         />
@@ -263,7 +263,7 @@ const CreateRobotModal = (props: {open: boolean, robot?: IRobot, onClose: () => 
                                                             <li className="previous list-inline-item">
                                                                 <Button
                                                                     onClick={() => {
-                                                                        setKey('runner');
+                                                                        setKey('image');
                                                                         previous();
                                                                     }}
                                                                     variant="secondary"

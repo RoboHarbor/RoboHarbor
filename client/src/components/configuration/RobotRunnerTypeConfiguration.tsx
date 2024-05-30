@@ -53,8 +53,8 @@ const RobotRunnerTypeConfiguration = ({bot, setBotValue, next, previous, possibl
             </Col>
             <Col sm={12} className={"d-flex flex-row overflow-auto"}>
                 {runnerPackages.sort(sortByPossibleRunners).map((runnerPackage: IImage) => {
-                    return <div onClick={() => setBotValue("runner.type", runnerPackage.name)}
-                                className={"card-width-220 justify-content-center text-center  card m-2 nomargin card-body card-hoverable "+(isValue("runner.type", runnerPackage.name) ? "card-hoverable-selected" : "")}>
+                    return <div onClick={() => setBotValue("image.name", runnerPackage.name)}
+                                className={"card-width-220 justify-content-center text-center  card m-2 nomargin card-body card-hoverable "+(isValue("image.name", runnerPackage.name) ? "card-hoverable-selected" : "")}>
                         <div className={"align-content-center mb-3"}><img style={{maxWidth: "50px", maxHeight: "50px"}} src={runnerPackage.logo} /></div>
                         <h4  className="card-title">{runnerPackage.title}</h4>
                     </div>

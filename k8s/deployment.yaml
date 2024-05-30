@@ -7,7 +7,7 @@ rules:
     resources: [ "pods", "services", "deployments" ]
     verbs: [ "get", "list", "watch", "create", "delete" ]
   - apiGroups: [ "batch" ]
-    resources: [ "jobs" ]
+    resources: [ "jobs", "cronjobs" ]
     verbs: [ "get", "list", "watch", "create", "delete" ]
   - apiGroups: [ "extensions" ]
     resources: [ "deployments" ]

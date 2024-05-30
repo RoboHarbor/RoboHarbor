@@ -21,7 +21,7 @@ export class HarborService {
             where: {
                 visible: true
             },
-            attributes: ["id", "name", "title", "description", "imageContainerName", "version", "logo", "attributes"],
+            attributes: ["id", "name", "title", "description", "imageContainerName","config", "version", "logo", "attributes"],
         });
     }
 
