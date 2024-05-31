@@ -272,8 +272,16 @@ export class RobotsService {
         if (bot.type) {
             robot.type = bot.type;
         }
+        robot.updatedAt = new Date();
         await robot.save();
-        await this.pierService.checkForAllRobots()
+
+        try {
+            await this.pierService.checkForAllRobots();
+        }
+        catch (e) {
+            this.logger.error("Error checking for all robots while updating: ", e);
+        }
+
 
 
         return robot;

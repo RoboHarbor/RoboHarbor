@@ -2,7 +2,7 @@ import {useEffect, useState} from "react";
 
 const CustomArguments = (props: {bot: any, onChange: (config: any, bot: any) => void}) => {
 
-    const [config, setConfig] = useState<any>(props.bot?.runner?.config?.arguments || {});
+    const [config, setConfig] = useState<any>(props.bot?.image?.config?.arguments || {});
 
     useEffect(() => {
 

@@ -2,7 +2,7 @@ import {useEffect, useState} from "react";
 
 const EnvironmentVariablesConfiguration = (props: {bot: any, onChange: (config: any, bot: any) => void}) => {
 
-        const [config, setConfig] = useState<any>(props.bot?.runner?.config?.env || {});
+        const [config, setConfig] = useState<any>(props.bot?.image?.config?.env || {});
 
         useEffect(() => {
 

@@ -174,6 +174,7 @@ export class PiersService {
                         name: robot.identifier,
                         labels: {
                             appControlledBy: 'roboharbor',
+                            updatedAt: robot.updatedAt.getTime().toString(),
                             robotId: robot.identifier
                         }
                     },
@@ -183,6 +184,7 @@ export class PiersService {
                             metadata: {
                                 labels: {
                                     appControlledBy: 'roboharbor',
+                                    updatedAt: robot.updatedAt.getTime().toString(),
                                     robotId: robot.identifier
                                 }
                             },
@@ -238,6 +240,7 @@ export class PiersService {
                         name: robot.identifier,
                         labels: {
                             appControlledBy: 'roboharbor',
+                            updatedAt: robot.updatedAt.getTime().toString(),
                             robotId: robot.identifier
                         }
                     },
@@ -247,6 +250,7 @@ export class PiersService {
                             metadata: {
                                 labels: {
                                     appControlledBy: 'roboharbor',
+                                    updatedAt: robot.updatedAt.getTime().toString(),
                                     robotId: robot.identifier
                                 }
                             },
@@ -276,7 +280,7 @@ export class PiersService {
                                 resolve({
                                     deployment: {
                                         metadata: {
-                                            name: resDepl.body.metadata.name
+                                            name: resDepl.body.metadata.name,
                                         }
                                     },
                                     robot: {
@@ -315,7 +319,14 @@ export class PiersService {
     }
 
     getSpecialEnvirons(robot: IRobot) {
-        return [];
+        return Object.keys(robot.image?.config?.env || {})
+            .map((k) => {
+                const val = robot.image?.config?.env[k];
+                return {
+                    name: k,
+                    value: val
+                };
+            });
     }
 
     getEnvironmentVariables(robot: IRobot, currentEnv: any[] = []) {
@@ -393,7 +404,8 @@ export class PiersService {
                         name: robot.identifier,
                         labels: {
                             appControlledBy: 'roboharbor',
-                            robotId: robot.identifier
+                            robotId: robot.identifier,
+                            updatedAt: robot.updatedAt.getTime().toString(),
                         }
                     },
                     spec: {
@@ -408,7 +420,8 @@ export class PiersService {
                             metadata: {
                                 labels: {
                                     appControlledBy: 'roboharbor',
-                                    robotId: robot.identifier
+                                    robotId: robot.identifier,
+                                    updatedAt: robot.updatedAt.getTime().toString(),
                                 }
                             },
                             spec: {
@@ -664,7 +677,9 @@ export class PiersService {
             const robots = await this.robotModel.findAll();
             return Promise.all(
                 robots.map((robot: Robot) => {
-                    return this.checkIfRobotIsCreated(robot);
+                    return this.checkIfRobotIsCreatedAndUpToDate(robot).catch((err: any) => {
+                        this.logger.error(err);
+                    });
                 })
             ).then(async (res: any) => {
                 this.logger.log('All Robots created');
@@ -691,6 +706,10 @@ export class PiersService {
 
                     }
                 }
+            })
+            .catch((err: any) => {
+                this.logger.error(err);
+                reject(err);
             });
         });
     }
@@ -698,49 +717,55 @@ export class PiersService {
     createRobot(robot: Robot) {
         return new Promise((resolve, reject) => {
             this.logger.log('Creating Robot');
-            return this.checkIfRobotIsCreated(robot).then((res: any) => {
+            return this.checkIfRobotIsCreatedAndUpToDate(robot).then((res: any) => {
                 this.logger.log('All Robots');
                 this.logger.log(res);
                 return resolve(res);
-            });
+            })
+            .catch((e)=> {
+                reject(e);
+
+            })
         });
     }
 
     runRobot(robot: Robot) {
         return new Promise((resolve, reject) => {
             this.logger.log('Creating Robot');
-            return this.checkIfRobotIsCreated(robot).then((res: any) => {
+            return this.checkIfRobotIsCreatedAndUpToDate(robot).then((res: any) => {
                 if (res && res.metadata?.labels?.robotId === robot.identifier) {
                     if (res.spec?.replicas > 0) {
                         return resolve(res);
                     }
-                    else {
-                        return this.updateRobot(robot, res)
-                            .then((res: any) => {
-                                return resolve(res);
-                            })
-                            .catch((err: any) => {
-                                return reject(err);
-                            });
-                    }
                 }
                 return resolve(res);
-            });
+            })
+            .catch((e)=> {
+                reject(e);
+
+            })
         });
     }
 
     stopRobot(robot: Robot) {
         return new Promise((resolve, reject) => {
             this.logger.log('Creating Robot');
-            return this.checkIfRobotIsCreated(robot).then((res: any) => {
-                this.logger.log('All Robots');
-                this.logger.log(res);
+            return this.checkIfRobotIsCreatedAndUpToDate(robot).then((res: any) => {
+                if (res && res.metadata?.labels?.robotId === robot.identifier) {
+                    if (res.spec?.replicas <= 0) {
+                        return resolve(res);
+                    }
+                }
                 return resolve(res);
-            });
+            })
+            .catch((e)=> {
+                reject(e);
+
+            })
         });
     }
 
-    private checkIfRobotIsCreated(robot: Robot) {
+    private checkIfRobotIsCreatedAndUpToDate(robot: Robot) {
         return new Promise((resolve, reject) => {
             this.logger.log('Checking if robot is created '+robot.identifier);
             return this.getAllRoboHarborDeployments().then((res: any) => {
@@ -754,6 +779,15 @@ export class PiersService {
                     }).catch((err: any) => {
                         return reject(err);
                     });
+                }
+                else {
+                    if (found.metadata?.labels?.updatedAt !== robot.updatedAt.getTime().toString()) {
+                        return this.updateRobot(robot, found).then((res: any) => {
+                            return resolve(res);
+                        }).catch((err: any) => {
+                            return reject(err);
+                        });
+                    }
                 }
 
                 return resolve(found);
@@ -800,7 +834,7 @@ export class PiersService {
         });
     }
 
-    private updateRobot(robot: Robot, config: any) {
+    updateRobot(robot: Robot, config: any) {
         return new Promise((resolve, reject) => {
             if (config && robot) {
                 config = JSON.parse(JSON.stringify(config));
@@ -818,7 +852,7 @@ export class PiersService {
                 delete config.spec?.progressDeadlineSeconds;
                 delete config.spec?.revisionHistoryLimit;
 
-                const newConfig = JSON.parse(JSON.stringify(config));
+                const oldConfig = JSON.parse(JSON.stringify(config));
                 if (config.spec && config.spec.replicas == 0 && robot.enabled == true) {
                     config.spec.replicas = 1;
                 }
@@ -826,14 +860,21 @@ export class PiersService {
                     config.spec.replicas = 0;
                 }
 
-                if (config.spec?.containers && config.spec.containers.length > 0) {
-                    config.spec.containers[0].env = [
-                        ...config.spec.containers[0].env,
-                        ...this.getEnvironmentVariables(robot, config.spec.containers[0].env),
+                if (config.metadata.labels) {
+                    config.metadata.labels.updatedAt = robot.updatedAt.getTime().toString();
+                }
+                if (config.spec.template.metadata.labels) {
+                    config.spec.template.metadata.labels.updatedAt = robot.updatedAt.getTime().toString();
+                }
+
+                if (config.spec?.template?.spec?.containers && config.spec?.template?.spec?.containers.length > 0) {
+                    config.spec.template.spec.containers[0].env = [
+                        ...config.spec?.template?.spec?.containers[0].env,
+                        ...this.getEnvironmentVariables(robot, config.spec.template.spec.containers[0].env),
                     ];
                 }
 
-                if (JSON.stringify(newConfig) != JSON.stringify(config)) {
+                if (JSON.stringify(oldConfig) != JSON.stringify(config)) {
                     if (robot.type == "forever") {
                         return this.kubeClientAppApi.replaceNamespacedDeployment(robot.identifier, 'default', config).then((res: any) => {
                             this.logger.log('Robot Updated');
