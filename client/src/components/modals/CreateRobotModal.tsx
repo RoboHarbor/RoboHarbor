@@ -254,6 +254,10 @@ const CreateRobotModal = (props: {open: boolean, robot?: IRobot, onClose: () => 
                                                                                 setBotValue("image.config", config);
                                                                                 setBot(bot);
                                                                             }}
+                                                                            onChangeRobotContent={(config: any, bot: any) => {
+                                                                                setBotValue("robotContentValues", config);
+                                                                                setBot(bot);
+                                                                            }}
                                                                         />
                                                                     </Col>
                                                                 </Row>

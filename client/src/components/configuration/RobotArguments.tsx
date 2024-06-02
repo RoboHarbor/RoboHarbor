@@ -1,9 +1,13 @@
 import {useEffect, useState} from "react";
 import sadRobot from "../../assets/images/robot/sad_robot.png";
+import Form from '@rjsf/core';
+import { RJSFSchema } from '@rjsf/utils';
+import validator from '@rjsf/validator-ajv8';
 
 const RoboArguments = (props: {bot: any, onChange: (config: any, bot: any) => void}) => {
 
-    const [robotArguments, setRobotArguments] = useState<any>(props.bot?.runner?.roboArguments || null);
+    const [robotArguments, setRobotArguments] = useState<any>(props.bot?.robotContent ? props.bot?.robotContent : null);
+    const [robotContentValues, setRobotContentValues] = useState<any>(props.bot?.robotContentValues ? props.bot?.robotContentValues : null);
 
     useEffect(() => {
 
@@ -20,10 +24,26 @@ const RoboArguments = (props: {bot: any, onChange: (config: any, bot: any) => vo
                     <div className={"alert alert-danger"}>
                         <h4 className={"fg-danger"}>No robot arguments found</h4>
                         <h5>Normally you can configure your robot with a easy user interface here. But we have not found a ".robot"
-                            File in your repository. Create one and see the values here. <a href={"#"}>(Read more here)</a></h5>
+                            File in your repository. Create one and see the values here. <a href={"https://rjsf-team.github.io/react-jsonschema-form/"}>(Generate a RObot File here)</a></h5>
                     </div>
                 </div>
             </div>}
+        {
+            robotArguments && <div>
+                <pre>
+                    <Form schema={robotArguments.jsonSchema}
+                            uiSchema={robotArguments.uiSchema}
+                            formData={robotContentValues}
+                            onChange={(e) => {
+                              if (e && e.formData) {
+                                  props.onChange(e.formData, props.bot);
+                              }
+                            }}
+                            children={true}
+                            validator={validator} />
+                </pre>
+            </div>
+        }
     </div>
 }
 

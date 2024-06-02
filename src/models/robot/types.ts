@@ -8,7 +8,7 @@ export enum BotType {
 
 export interface ISourceInfo {
     localVersion: string;
-    sourceVersion: string;
+    sourceVersion?: string;
     sourceMessage?: string;
 }
 
@@ -30,6 +30,7 @@ export interface IRobot {
     };
     secret?: string;
     robotContent?: any;
+    robotContentValues?: any;
     updatedAt?: Date;
     files?: any;
 

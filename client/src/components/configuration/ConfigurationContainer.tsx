@@ -5,7 +5,9 @@ import CustomArguments from "./CustomArguments";
 import RoboArguments from "./RobotArguments";
 import {IRobot} from "../../../../src/models/robot/types";
 
-const ConfigurationContainer = (props: {bot: IRobot, onChange: (config: any, bot: any) => void}) => {
+const ConfigurationContainer = (props: {bot: IRobot,
+                                        onChange: (config: any, bot: any) => void,
+                                        onChangeRobotContent: (config: any, bot: any) => void}) => {
 
     const [config, setConfig] = useState<any>(props.bot?.config || {});
 
@@ -16,10 +18,7 @@ const ConfigurationContainer = (props: {bot: IRobot, onChange: (config: any, bot
 
     return <div className={""}>
         <RoboArguments bot={props.bot} onChange={(config, bot) => {
-            props.onChange({
-                ...props.bot.image?.config,
-                robotArguments: config
-            }, props.bot);
+            props.onChangeRobotContent(config, props.bot);
         }} />
 
         <AttributeConfiguration attributeConfig={props.bot?.image?.config?.attributes} bot={props.bot}

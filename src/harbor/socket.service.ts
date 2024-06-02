@@ -32,6 +32,7 @@ export enum MessageTypes {
     PROTOCOL_MISMATCH = "protocolMismatch",
     ROBOT_MANUAL_RUN = "robotManualRun",
     REGISTER_ROBOT = "REGISTER_ROBOT",
+    ROBOT_START_INFO = "robotStartInfo",
     PING = "ping",
     REGISTERED = "registered",
     PIER_DETAILS = "pierDetails",
@@ -45,7 +46,6 @@ export enum MessageTypes {
     ROBOT_STOPPED = "robotStopped",
     ROBOT_LOG = "robotLog",
     ROBOT_CRASHED = "robotCrashed",
-    UPDATE_ROBOT = "updateRobot",
     ROBOT_UPDATED = "robotUpdated",
     RELOAD_ROBOT_SOURCE = "reloadRobotSource",
     UPDATE_ROBOT_SOURCE = "updateRobotSource",
@@ -175,14 +175,6 @@ export class MessageBuilder {
         return {
             type: MessageTypes.ROBOT_CRASHED,
             code: code
-        };
-    }
-
-    static updateRobot(robotId: number, fieldsToUpdate: any) {
-        return {
-            type: MessageTypes.UPDATE_ROBOT,
-            robotId: robotId,
-            fieldsToUpdate: fieldsToUpdate
         };
     }
 
@@ -362,16 +354,38 @@ export class SocketService {
                 }, 100);
 
             }
+            else if (message.type === MessageTypes.ROBOT_START_INFO) {
+                const robot = await this.robotModel.findOne({
+                    where: {
+                        identifier: message.robotId
+                    }
+                });
+                if (robot) {
+                    robot.sourceInfo = {
+                        ...robot.sourceInfo,
+                        localVersion: message.gitCommit,
+                        sourceVersion: message.gitRemoteCommit,
+                    };
+                    await robot.save();
+
+                }
+            }
             else if (message.type === MessageTypes.GET_ROBOT_DETAILS) {
                 const robot = await this.robotModel.findOne({
                     where: {
-                        identifier: message.roboId,
-                        secret: message.robotSecret
+                        identifier: message.roboId
                     }
 
                 })
                 if (robot) {
-                    this.answer(socket, message, MessageBuilder.getRobotDetails(robot));
+                    if (robot.secret !== message.robotSecret) {
+                        this.logger.error("Invalid secret", message);
+                        this.answer(socket, message, MessageBuilder.errorRobotMessage(message.socketId, message.pierId, "Invalid secret"));
+                        return;
+                    }
+                    else {
+                        this.answer(socket, message, MessageBuilder.getRobotDetails(robot));
+                    }
                 }
                 else {
                     this.logger.error("Robot not found", message);
@@ -383,19 +397,6 @@ export class SocketService {
                 this.logWsService.onLogMessageReceived(message.targetRobot, message.level, message.logs, message.date);
                 this.robotsService.logRobot(robotId, message.level, message.logs);
 
-            }
-            else if (message.type === MessageTypes.UPDATE_ROBOT) {
-                const robotId = message.robotId;
-                const fieldsToUpdate = message.fieldsToUpdate;
-                const robot = await this.robotModel.findByPk(robotId);
-                if (robot) {
-                    await robot.update(fieldsToUpdate)
-                    this.answer(socket, message, MessageBuilder.updatedRobotDetails(robot));
-                }
-                else {
-                    this.logger.error("Robot not found for update", message);
-                    this.answer(socket, message, MessageBuilder.errorRobotMessage(message.socketId, message.pierId, "Robot not found for update"));
-                }
             }
             else if (message.type === MessageTypes.PING) {
                 // Nothing to do

@@ -69,6 +69,11 @@ export class Robot extends Model implements IRobot {
     @Column({
         type: "json"
     })
+    robotContentValues: string;
+
+    @Column({
+        type: "json"
+    })
     files: string;
 
 }

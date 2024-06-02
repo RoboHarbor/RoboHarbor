@@ -152,11 +152,13 @@ export class RobotsService {
             robot.source = bot.source;
             robot.robotContent = bot.robotContent;
             robot.image = bot.image;
+            robot.robotContentValues = bot.robotContentValues;
             robot.config = bot.config;
             robot.type = bot.type;
 
             robot.secret = RobotsService.generateRandomSecret();
 
+            robot.sourceInfo = bot.sourceInfo;
             robot.identifier = uniqueNamesGenerator(config);
 
 
@@ -272,6 +274,9 @@ export class RobotsService {
         if (bot.type) {
             robot.type = bot.type;
         }
+        if (bot.robotContentValues) {
+            robot.robotContentValues = bot.robotContentValues;
+        }
         robot.updatedAt = new Date();
         await robot.save();
 
@@ -316,7 +321,9 @@ export class RobotsService {
         if (!robot) {
             throw new RoboHarborError(404, "Robot not found");
         }
-        return this.socketService.sendMessageToRobotWithResponse(robot.identifier, MessageBuilder.updateSourceMessage(robot))
+        robot.updatedAt = new Date();
+        await robot.save();
+        return this.pierService.updateSource(robot)
             .then((res) => {
                 return res;
             });

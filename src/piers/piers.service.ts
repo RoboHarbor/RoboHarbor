@@ -543,6 +543,8 @@ export class PiersService {
                     name: "validate-robot",
                     version: "latest"
                 }
+                bot.updatedAt = new Date();
+                bot.secret = "robohar";
                 let returnedRobot = null;
                 return this.startRobotJob(bot, true, true).then((res: any) => {
                     this.logger.debug('Robot Deployment Started');
@@ -565,6 +567,13 @@ export class PiersService {
                                 else {
                                     return resolve({
                                         source: true,
+                                        robotContent: resVal.robotContent,
+                                        files: resVal.files,
+                                        sourceInfo: {
+                                            localVersion: resVal.git_commit,
+                                            sourceVersion: resVal.git_commit_remote,
+                                            sourceMessage: resVal.git_commit_remote_message,
+                                        },
                                         possibleImages: this.findPossibleImages(resVal.files),
                                     } as IRoboShellValidationResult);
                                 }
@@ -831,6 +840,21 @@ export class PiersService {
             else {
                 return resolve(robot);
             }
+        });
+    }
+
+    updateSource(robot: Robot) {
+        return new Promise((resolve, reject) => {
+            this.logger.log('Updating Source');
+            return this.checkIfRobotIsCreatedAndUpToDate(robot).then((res: any) => {
+                this.logger.log('All Robots');
+                this.logger.log(res);
+                return resolve(res);
+            })
+            .catch((e)=> {
+                reject(e);
+
+            })
         });
     }
 

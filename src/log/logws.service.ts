@@ -12,11 +12,12 @@ export class LogWSService {
     constructor()  {
     }
 
+    handleDisconnect(socket: any, server: any) {
+
+        LogWSService.connectedClients.delete(socket);
+    }
 
     handleConnection(socket: any, server: any) {
-        socket.on('disconnect', () => {
-            LogWSService.connectedClients.delete(socket);
-        });
 
         LogWSService.connectedClients.set(socket, {});
 

@@ -111,6 +111,15 @@ const SourceConfiguration = ({bot, next, setBotValue, setPossibleRunners, isEdit
         if (data.possibleRunners && data.possibleRunners.length > 0) {
             setPossibleRunners(data.possibleRunners);
         }
+        if (data.sourceInfo) {
+            setBotValue("sourceInfo", data.sourceInfo);
+        }
+        if (data.robotContentValues) {
+            setBotValue("robotContentValues", data.robotContentValues);
+        }
+        if (data.robotContent) {
+            setBotValue("robotContent", data.robotContent);
+        }
     }
 
     const toggleAuthentication = () => {
