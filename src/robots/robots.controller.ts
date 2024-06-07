@@ -1,7 +1,6 @@
 import {Body, Controller, Delete, Get, HttpException, Logger, Param, Post, Put} from '@nestjs/common';
 import {ApiOperation, ApiTags} from "@nestjs/swagger";
 import {RoboHarborError} from "../errors/RoboHarborError";
-import {HarborService} from "../harbor/harbor.service";
 import {RobotsService} from "./robots.service";
 
 @Controller('robots')

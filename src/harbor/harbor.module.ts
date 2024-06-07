@@ -6,14 +6,13 @@ import {PiersService} from "../piers/piers.service";
 import {PiersModule} from "../piers/piers.module";
 import {SequelizeModule} from "@nestjs/sequelize";
 import {Robot} from "../db/robot";
-import {LogModule} from "../log/log.module";
 import {RobotsModule} from "../robots/robots.module";
 import {RobotsService} from "../robots/robots.service";
 import {Images} from "../db/images.model";
 
 @Module({
   controllers: [HarborController],
-  imports: [LogModule, RobotsModule, SequelizeModule.forFeature([Images, Robot])],
+  imports: [RobotsModule, SequelizeModule.forFeature([Images, Robot])],
   providers: [HarborService, SocketService],
   exports: [SocketService]
 })

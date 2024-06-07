@@ -7,7 +7,6 @@ import {InjectModel} from "@nestjs/sequelize";
 import {Robot} from "../db/robot";
 import {IRobot} from "../models/robot/types";
 import {LogLevel} from "../models/other/types";
-import {LogWSService} from "../log/logws.service";
 import {cleanRobotData} from "../helper/robo";
 
 const WAIT_FOR_REGISTRATION = 5000;
@@ -233,7 +232,6 @@ export class SocketService {
     private static messageResponseRegistry: Map<string, IMessageResponseInfo> = new Map();
 
     constructor(
-                private readonly logWsService: LogWSService,
                 @Inject(forwardRef(() => RobotsService))
                 private robotsService: RobotsService,
 
@@ -391,12 +389,6 @@ export class SocketService {
                     this.logger.error("Robot not found", message);
                     this.answer(socket, message, MessageBuilder.errorRobotMessage(message.socketId, message.pierId, "Robot not found"));
                 }
-            }
-            else if (message.type === MessageTypes.ROBOT_LOG) {
-                const robotId = message.targetRobot;
-                this.logWsService.onLogMessageReceived(message.targetRobot, message.level, message.logs, message.date);
-                this.robotsService.logRobot(robotId, message.level, message.logs);
-
             }
             else if (message.type === MessageTypes.PING) {
                 // Nothing to do

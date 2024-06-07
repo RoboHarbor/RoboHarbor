@@ -50,7 +50,7 @@ const LogView = ({ robotId, reload }: LogViewProps) => {
                             },
                             formatMessage: (msg) => {
                                 const log = fromJSON(msg);
-                                return log.level+" - "+replaceLastNL(log.logs)+" - "+dateFormat(new Date(log.date));
+                                return log.pod+" / "+log.level+" - "+dateFormat(new Date(log.date))+" - "+replaceLastNL(log.logs);
                             }
                         }}
                         stream={true}

@@ -682,44 +682,50 @@ export class PiersService {
 
     checkForAllRobots() {
         return new Promise(async (resolve, reject) => {
-            this.logger.log('Checking for all robots');
-            const robots = await this.robotModel.findAll();
-            return Promise.all(
-                robots.map((robot: Robot) => {
-                    return this.checkIfRobotIsCreatedAndUpToDate(robot).catch((err: any) => {
-                        this.logger.error(err);
-                    });
-                })
-            ).then(async (res: any) => {
-                this.logger.log('All Robots created');
-                this.logger.log(res);
-                resolve(res);
+            try {
+                this.logger.log('Checking for all robots');
+                const robots = await this.robotModel.findAll();
+                return Promise.all(
+                    robots.map((robot: Robot) => {
+                        return this.checkIfRobotIsCreatedAndUpToDate(robot).catch((err: any) => {
+                            this.logger.error(err);
+                        });
+                    })
+                ).then(async (res: any) => {
+                    this.logger.log('All Robots created');
+                    this.logger.log(res);
+                    resolve(res);
 
-                const allRobotsDeployed = await this.getAllRoboHarborDeployments();
-                for (const robot of allRobotsDeployed) {
-                    try {
-                        const found = await this.robotModel.findOne({where: {identifier: robot.metadata?.labels?.robotId}});
-                        if (!found) {
-                            if (robot.spec?.template.spec?.containers[0]?.image.includes("validate-robot") != false) {
-                                continue;
-                            }
-                            try {
-                                this.removeRobotFromCluster(robot);
-                            }
-                            catch(e) {
+                    const allRobotsDeployed = await this.getAllRoboHarborDeployments();
+                    for (const robot of allRobotsDeployed) {
+                        try {
+                            const found = await this.robotModel.findOne({where: {identifier: robot.metadata?.labels?.robotId}});
+                            if (!found) {
+                                if (robot.spec?.template.spec?.containers[0]?.image.includes("validate-robot") != false) {
+                                    continue;
+                                }
+                                try {
+                                    this.removeRobotFromCluster(robot);
+                                }
+                                catch(e) {
 
+                                }
                             }
                         }
-                    }
-                    catch(e) {
+                        catch(e) {
 
+                        }
                     }
-                }
-            })
-            .catch((err: any) => {
-                this.logger.error(err);
-                reject(err);
-            });
+                })
+                    .catch((err: any) => {
+                        this.logger.error(err);
+                        reject(err);
+                    });
+            }
+            catch(e) {
+                this.logger.error(e);
+                reject(e);
+            }
         });
     }
 

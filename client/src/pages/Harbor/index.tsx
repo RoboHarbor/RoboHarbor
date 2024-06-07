@@ -29,6 +29,7 @@ const AllRobotsOverview = ({ robots }: AllRobotsOverviewProps) => {
                 return (
                     <Col xl={4} key={index.toString()}>
                         <Card>
+                            <Link to="#" className="text-primary">
                             <Card.Body className="project-box">
                                 <Badge  className="float-end">
 
@@ -43,61 +44,11 @@ const AllRobotsOverview = ({ robots }: AllRobotsOverviewProps) => {
                                 </p>
                                 <p className="text-muted font-13">
 
-                                    <Link to="#" className="text-primary">
-                                        View more
-                                    </Link>
+                                        {robot.identifier}
                                 </p>
 
-                                <ul className="list-inline">
-                                    <li className="list-inline-item me-4">
-                                        <h4 className="mb-0"></h4>
-                                        <p className="text-muted">Questions</p>
-                                    </li>
-                                    <li className="list-inline-item">
-                                        <h4 className="mb-0"></h4>
-                                        <p className="text-muted">Comments</p>
-                                    </li>
-                                </ul>
-
-                                <div className="project-members mb-2">
-                                    <h5 className="float-start me-3">Team :</h5>
-                                    <div className="avatar-group">
-                                        {( []).map((member: any, index) => {
-                                            return (
-                                                <OverlayTrigger
-                                                    key={index.toString()}
-                                                    placement="bottom"
-                                                    overlay={<Tooltip id={member.name}>{member.name}</Tooltip>}
-                                                >
-                                                    <Link to="#" className="avatar-group-item">
-                                                        <img
-                                                            src={member.image}
-                                                            className="rounded-circle avatar-sm"
-                                                            alt=""
-                                                        />
-                                                    </Link>
-                                                </OverlayTrigger>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-
-                                <h5 className="mb-2 fw-semibold">
-                                    Progress
-                                    <span className={classNames('float-end', 'text-')}>
-                                        %
-                                    </span>
-                                </h5>
-                                <ProgressBar
-                                    className={classNames('progress-bar-alt-' , 'progress-sm')}
-                                >
-                                    <ProgressBar
-                                        variant={""}
-                                        now={0}
-                                        className="progress-animated"
-                                    />
-                                </ProgressBar>
                             </Card.Body>
+                            </Link>
                         </Card>
                     </Col>
                 );

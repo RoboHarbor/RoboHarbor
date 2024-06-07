@@ -16,7 +16,6 @@ import * as process from "process";
 import {Robot} from "./db/robot";
 import {AppLogws} from "./app.logws";
 import {LogModule} from "./log/log.module";
-import {Log} from "./db/log.model";
 import {Credentials} from "./db/credentials.model";
 import {SwarmModel} from "./db/swarm.model";
 import {Images} from "./db/images.model";
@@ -35,7 +34,7 @@ import {SocketService} from "./harbor/socket.service";
       username: process.env.DB_USER,
       password: process.env.DB_PASS,
       database: process.env.DB,
-      models: [User,  Robot, SwarmModel, Log, Credentials, Images],
+      models: [User,  Robot, SwarmModel, Credentials, Images],
       autoLoadModels: true,
       synchronize: true,
       sync: {

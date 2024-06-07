@@ -1,20 +1,33 @@
-import {Injectable, Logger} from '@nestjs/common';
-import { Socket } from 'socket.io';
+import {Inject, Injectable, Logger} from '@nestjs/common';
+import {Socket} from 'socket.io';
 import {FollowRobotLogMessage, fromJSON, toJSON, UIWSMessage} from "../../client/src/models/log/types";
-import {Log} from "../db/log.model";
-import {Op} from "sequelize";
+import {ICallback, ICallbackLogEntry, ILog, KubernetesLogService, LogType} from "../piers/kubernetes.log.service";
+import {Robot} from "../db/robot";
+import {InjectModel} from "@nestjs/sequelize";
 
 @Injectable()
-export class LogWSService {
+export class LogWSService implements ICallback {
     private readonly logger = new Logger(LogWSService.name);
     public static readonly connectedClients: Map<Socket, any> = new Map<Socket, any>();
 
-    constructor()  {
+    constructor(
+        @Inject(KubernetesLogService)
+        private kubernetesLogService: KubernetesLogService,
+        @InjectModel(Robot)
+        private robotModel: typeof Robot,
+    )  {
     }
 
     handleDisconnect(socket: any, server: any) {
 
+        const info = LogWSService.connectedClients.get(socket);
+        if (info && info.followLogs) {
+            info.followLogs.forEach((key) => {
+                this.kubernetesLogService.stopFollowLogOfPod(key.toString(), this);
+            });
+        }
         LogWSService.connectedClients.delete(socket);
+
     }
 
     handleConnection(socket: any, server: any) {
@@ -38,7 +51,21 @@ export class LogWSService {
                     LogWSService.connectedClients.set(socket, {
                         followLogs: newlogs
                     });
-                    this.onNewClientFollowsLogs(socket);
+                    const robot  = await this.robotModel.findOne({
+                        where: {
+                            id: followRobotLogMessage.robotId
+                        }
+                    });
+
+                    const key = followRobotLogMessage.robotId.toString();
+
+                    this.kubernetesLogService.followLog(
+                        robot.type == "forever" ? LogType.DEPLOYMENT : LogType.JOB,
+                        "default",
+                        robot.identifier,
+                        key,
+                        this,
+                    )
                 }
             }
             catch(e) {
@@ -46,6 +73,44 @@ export class LogWSService {
             }
 
         });
+    }
+
+    onLog(log: ICallbackLogEntry, key: string) {
+        if (LogWSService.connectedClients.entries()) {
+            const clients = [...LogWSService.connectedClients.entries()].filter(([socket, client]) => {
+                return client.followLogs && client.followLogs.includes(parseInt(key));
+            }).map(([socket, client]) => {
+                return socket;
+            });
+
+            clients.forEach((client) => {
+                client.send(toJSON({
+                    level: 'log',
+                    pod: log.pod,
+                    date: log.timestamp,
+                    logs: log.message
+                }));
+            });
+        }
+    }
+
+    onError(err: ICallbackLogEntry, key: string) {
+        if (LogWSService.connectedClients.entries()) {
+            const clients = [...LogWSService.connectedClients.entries()].filter(([socket, client]) => {
+                return client.followLogs && client.followLogs.includes(parseInt(key));
+            }).map(([socket, client]) => {
+                return socket;
+            });
+
+            clients.forEach((client) => {
+                client.send(toJSON({
+                    level: 'error',
+                    pod: err.pod,
+                    date: err.timestamp,
+                    logs: err.message
+                }));
+            });
+        }
     }
 
     onLogMessageReceived(targetRobot: number, level: any, logs: any, date: Date) {
@@ -72,32 +137,6 @@ export class LogWSService {
         // Get the last 30 log entries for the specified robot
         // Send them to the client
         const info = LogWSService.connectedClients.get(socket);
-        if (info && info.followLogs) {
-            const logs = [];
-            for (let robotId of info.followLogs) {
-                Log.findAll({
-                    where: {
-                        robotId: robotId,
-                        // Where date not null
-                        date: {
-                            [Op.ne]: null
-                        }
-                    },
-                    order: [
-                        ['date', 'DESC']
-                    ],
-                    limit: 30
-                }).then((res) => {
-                    for (let log of res.reverse()) {
-                        socket.send(toJSON({
-                            type: 'log',
-                            level: log.level,
-                            date: log.date,
-                            logs: log.logs
-                        }));
-                    }
-                });
-            }
-        }
+
     }
 }

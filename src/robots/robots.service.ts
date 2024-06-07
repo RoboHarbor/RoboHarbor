@@ -7,7 +7,6 @@ import {InjectConnection, InjectModel} from "@nestjs/sequelize";
 import {Sequelize, Transaction} from "sequelize";
 import {RoboHarborError} from "../errors/RoboHarborError";
 import {uniqueNamesGenerator, adjectives, colors, animals, Config} from 'unique-names-generator';
-import {Log} from "../db/log.model";
 import {Credentials} from "../db/credentials.model";
 import {Images} from "../db/images.model";
 import {PiersService} from "../piers/piers.service";
@@ -82,65 +81,7 @@ export class RobotsService {
                 }
             })
     }
-    
-    saveLogsLater() {
-        return new Promise<void>((resolve, reject) => {
-           try {
-               
-                if (this.logQueue.length > 0) {
-                    const saveLogs = () => {
-                        const logs = this.logQueue;
-                        this.sequelize.transaction(async (t: Transaction) => {
-                            await Log.bulkCreate(logs, {transaction: t});
-                            return Promise.resolve();
-                        })
-                        .then(() => {
-                            this.logQueue = [];
-                            this.lastTimeSaved = new Date();
-                            return resolve();
-                        })
-                        .catch((err) => {
-                            this.logQueue = this.logQueue.concat(logs);
-                            return reject(err);
-                        });
-                    }
-                    
-                    this.saveLogTimer = setTimeout(saveLogs, 1000);
-                    if (this.lastTimeSaved) {
-                        const diff = new Date().getTime() - this.lastTimeSaved.getTime();
-                        if (diff > 3400) {
-                            clearTimeout(this.saveLogTimer);
-                            saveLogs();
-                        }
-                    }
-                }
-               
-               return resolve();
-           } 
-           catch(e) {
-               reject(e);
-           }
-        });
-    }
 
-    logRobot(robotId: number, level: string, logs: string) {
-        return new Promise<void>((resolve, reject) => {
-            try {
-                this.logQueue.push({
-                    robotId: robotId,
-                    level: level,
-                    logs: logs,
-                    date: new Date()
-                });
-                this.saveLogsLater();
-                return resolve();
-            }
-            catch (e) {
-                reject(e);
-            }
-        });
-
-    }
 
     async createRobot(bot: IRobot) {
         // Start a transaction to create a robot and add it to a pier
