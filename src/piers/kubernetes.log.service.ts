@@ -94,6 +94,7 @@ export class KubernetesLogService {
     followLog(type: LogType, namespace: string, typeName: string, key: string, callback: ICallback) {
         // Follow logs of a pod
         if (!this.registryOfFollows.has(key)) {
+            this.logger.debug("Starting follow log of already existing " + key);
             this.registryOfFollows.set(key, {
                 callbacks: [],
                 type: type,
@@ -171,6 +172,7 @@ export class KubernetesLogService {
                 return;
             }
             try {
+                this.logger.debug("Starting follow log of " + key);
                 entry.updating = true;
 
                 const element : any = await this.getMetaInfo(entry.namespace, entry.type, entry.typeName);
@@ -184,6 +186,7 @@ export class KubernetesLogService {
 
                 // Read all pods by label
                 const listOfPods = await this.kubeClientApi.listNamespacedPod(entry.namespace, null, null, null, null, labelName+"="+firstSelector[labelName]);
+                this.logger.debug("Found " + listOfPods.body.items.length + " pods for " + key);
                 if (!listOfPods.body.items || listOfPods.body.items.length === 0) {
                     return;
                 }
@@ -192,10 +195,13 @@ export class KubernetesLogService {
                     this.registryOfPods.set(key, new Map<string, ILogPod>());
                 }
 
+                this.logger.debug("Iterating pods for " + key);
                 for (const pod of listOfPods.body.items) {
                     const podkey = pod.metadata.namespace + "/" + pod.metadata.name + "/" + pod.spec.containers[0].name;
                     if (this.registryOfPods.has(key)) {
+                        this.logger.debug("Checking if pod " + podkey + " is already being followed");
                         if (!this.registryOfPods.get(key).has(podkey)) {
+                            this.logger.debug("Starting follow log of " + podkey);
                             this.startFollowLogOfPod(key, pod);
                         }
                     }
@@ -228,6 +234,7 @@ export class KubernetesLogService {
                        try {
                            chunk.toString().split("\n").forEach((data: string) => {
                                if (data.length > 0) {
+                                   this.logger.debug(data);
                                    cb.onLog({
                                        message: KubernetesLogService.removeDate(data),
                                        timestamp: KubernetesLogService.extractDate(data),
@@ -244,6 +251,7 @@ export class KubernetesLogService {
                    if (this.registryOfFollows.has(key)) {
                        for (const cb of this.registryOfFollows.get(key).callbacks) {
                            try {
+                               this.logger.debug(err);
                                cb.onError({
                                       message: KubernetesLogService.removeDate(err.toString()),
                                       timestamp: KubernetesLogService.extractDate(err.toString()),

@@ -31,7 +31,7 @@ export class LogWSService implements ICallback {
     }
 
     handleConnection(socket: any, server: any) {
-
+        this.logger.debug('Client connected to log websocket');
         LogWSService.connectedClients.set(socket, {});
 
         const removeDuplicates = (param: any[]) => {
@@ -59,6 +59,7 @@ export class LogWSService implements ICallback {
 
                     const key = followRobotLogMessage.robotId.toString();
 
+                    this.logger.log(`Following logs for robot ${robot.identifier} with key ${key}`);
                     this.kubernetesLogService.followLog(
                         robot.type == "forever" ? LogType.DEPLOYMENT : LogType.JOB,
                         "default",

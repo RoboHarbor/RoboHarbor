@@ -26,20 +26,20 @@ export class RoboHarborLogger implements LoggerService {
      * Write a 'warn' level log.
      */
     warn(message: any, ...optionalParams: any[]) {
-        console.warn(message, optionalParams);
+        console.log(message, optionalParams);
     }
 
     /**
      * Write a 'debug' level log.
      */
     debug?(message: any, ...optionalParams: any[]) {
-        console.debug(message, optionalParams);
+        console.log(message, optionalParams);
     }
 
     /**
      * Write a 'verbose' level log.
      */
     verbose?(message: any, ...optionalParams: any[]) {
-        console.info(message, optionalParams);
+        console.log(message, optionalParams);
     }
 }

@@ -172,22 +172,34 @@ const SourceConfiguration = ({bot, next, setBotValue, setPossibleRunners, isEdit
                             <p className="card-text">Load Data from Repository.</p>
                         </div>
                     </Col>
+                    <Col sm={3}>
+                        <div onClick={() => setBotValue("source.type", "robotstore")} className={"text-center card nomargin card-body card-fill card-hoverable "+(isValue("source.type", "robotstore") ? "card-hoverable-selected" : "")}>
+                            <i className={"mdi mdi-36px mdi-robot"}></i>
+                            <h4  className="card-title">Robot Store</h4>
+                            <p className="card-text">A list of click-ready Robots..</p>
+                        </div>
+                    </Col>
                     {<Col sm={3}>
-                        <div className={"text-center card disabled nomargin card-body card-fill card-hoverable "+(isValue("source.type", "docker") ? "card-hoverable-selected" : "")}>
+                        <div onClick={() => setBotValue("source.type", "docker")}  className={"text-center card nomargin card-body card-fill card-hoverable "+(isValue("source.type", "docker") ? "card-hoverable-selected" : "")}>
                             <i className={"mdi mdi-36px mdi-docker"}></i>
                             <h4  className="card-title">Docker Container</h4>
                             <p className="card-text">Enter a Docker Container.</p>
                         </div>
                     </Col>}
                     <Col sm={3}>
-                        <div className={"text-center card disabled nomargin card-body card-fill card-hoverable "+(isValue("source.type", "shell") ? "card-hoverable-selected" : "")}>
+                        <div onClick={() => setBotValue("source.type", "shell")}  className={"text-center card nomargin card-body card-fill card-hoverable "+(isValue("source.type", "shell") ? "card-hoverable-selected" : "")}>
                             <i className={"mdi mdi-36px mdi-console"}></i>
                             <h4  className="card-title">Shell Terminal</h4>
                             <p className="card-text">Run a easy Shell.</p>
                         </div>
                     </Col>
                 </Row>
-
+                {isValue("source.type", "robotstore") && <Row>
+                    <Col sm={24}>
+                        <div className="mt-3 p-3 card card-bordered">
+                        </div>
+                    </Col>
+                </Row>}
                 {isValue("source.type", "git") && <Row>
                     <Col sm={24}>
                         <div className="mt-3 p-3 card card-bordered">
