@@ -19,7 +19,7 @@ export class LogWSService implements ICallback {
     }
 
     handleDisconnect(socket: any, server: any) {
-
+        this.logger.debug('Client disconnected from log websocket');
         const info = LogWSService.connectedClients.get(socket);
         if (info && info.followLogs) {
             info.followLogs.forEach((key) => {
@@ -44,6 +44,7 @@ export class LogWSService implements ICallback {
         socket.on('message', async (message: any) => {
             try {
                 const msg : UIWSMessage = fromJSON(message.toString());
+                this.logger.debug(`Received message from client: ${msg.type}`)
                 if (msg.type === FollowRobotLogMessage.getType()) {
                     const followRobotLogMessage = msg as FollowRobotLogMessage;
                     const oldLogs = LogWSService.connectedClients.get(socket).followLogs || [];
@@ -56,6 +57,7 @@ export class LogWSService implements ICallback {
                             id: followRobotLogMessage.robotId
                         }
                     });
+
 
                     const key = followRobotLogMessage.robotId.toString();
 
@@ -70,7 +72,7 @@ export class LogWSService implements ICallback {
                 }
             }
             catch(e) {
-
+                this.logger.error(`Error parsing message from client: ${e}`);
             }
 
         });

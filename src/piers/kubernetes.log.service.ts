@@ -210,7 +210,7 @@ export class KubernetesLogService {
 
             }
             catch(e) {
-
+                this.logger.error(e);
             }
             finally {
                 entry.updating = false;
@@ -244,7 +244,9 @@ export class KubernetesLogService {
                                }
                            });
                        }
-                       catch(e){}
+                       catch(e){
+                            this.logger.error("StartFollowLogOfPod: " + e);
+                       }
                    });
                })
                const errorHappened = (err: any, podkey: string) => {
@@ -259,7 +261,7 @@ export class KubernetesLogService {
                                       pod: pod.metadata.name
                                }, key);
                            } catch (e) {
-
+                                this.logger.error("ErrorHappened: " + e);
                            }
                        }
                    }
@@ -291,7 +293,7 @@ export class KubernetesLogService {
                    });
            }
            catch(e) {
-
+                this.logger.error("StartFollowLogOfPod: " + e);
            }
         });
     }

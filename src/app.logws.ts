@@ -29,7 +29,6 @@ export class AppLogws implements OnGatewayInit, OnGatewayConnection, OnGatewayDi
     this.socketService.handleConnection(client, this.server);
   }
 
-
   @ApiOperation({})
   handleDisconnect(@ConnectedSocket() client: any) {
     // Handle disconnection event
